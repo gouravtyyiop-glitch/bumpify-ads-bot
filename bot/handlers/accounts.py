@@ -1,6 +1,7 @@
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes
 from bot.utils import db
+from bot.utils.helpers import safe_edit
 
 
 async def my_accounts_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -9,31 +10,27 @@ async def my_accounts_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
     await query.answer()
 
     accounts = await db.get_accounts(user_id)
+    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("◀️ Back", callback_data="dashboard")]])
 
     if not accounts:
-        keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("◀️ Back", callback_data="dashboard")]])
-        await query.edit_message_text(
-            "👥 **My Accounts**\n\n❌ No accounts added yet.\nUse **Add Account** to get started.",
-            parse_mode="Markdown",
+        await safe_edit(
+            query,
+            "👥 <b>My Accounts</b>\n\n❌ No accounts added yet.\nUse <b>Add Account</b> to get started.",
             reply_markup=keyboard,
+            parse_mode="HTML",
         )
         return
 
-    lines = ["👥 **My Accounts**\n"]
+    lines = ["👥 <b>My Accounts</b>\n"]
     for i, acc in enumerate(accounts, 1):
-        lines.append(f"`{i}.` **{acc['name']}**\n   📱 `{acc['phone']}`")
-
-    lines.append(f"\n📊 Total: **{len(accounts)} account(s)**")
+        lines.append(f"<code>{i}.</code> <b>{acc['name']}</b>\n   📱 <code>{acc['phone']}</code>")
+    lines.append(f"\n📊 Total: <b>{len(accounts)} account(s)</b>")
 
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton("🗑 Remove Account", callback_data="delete_account")],
         [InlineKeyboardButton("◀️ Back", callback_data="dashboard")],
     ])
-    await query.edit_message_text(
-        "\n".join(lines),
-        parse_mode="Markdown",
-        reply_markup=keyboard,
-    )
+    await safe_edit(query, "\n".join(lines), reply_markup=keyboard, parse_mode="HTML")
 
 
 async def delete_account_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -43,7 +40,7 @@ async def delete_account_handler(update: Update, context: ContextTypes.DEFAULT_T
 
     accounts = await db.get_accounts(user_id)
     if not accounts:
-        await query.answer("No accounts to delete.", show_alert=True)
+        await query.answer("No accounts to remove.", show_alert=True)
         return
 
     buttons = []
@@ -54,10 +51,11 @@ async def delete_account_handler(update: Update, context: ContextTypes.DEFAULT_T
         )])
     buttons.append([InlineKeyboardButton("◀️ Back", callback_data="my_accounts")])
 
-    await query.edit_message_text(
-        "🗑 **Remove Account**\n\nSelect the account to remove:",
-        parse_mode="Markdown",
+    await safe_edit(
+        query,
+        "🗑 <b>Remove Account</b>\n\nSelect the account to remove:",
         reply_markup=InlineKeyboardMarkup(buttons),
+        parse_mode="HTML",
     )
 
 
@@ -67,12 +65,12 @@ async def confirm_delete_handler(update: Update, context: ContextTypes.DEFAULT_T
     await query.answer()
 
     await db.remove_account(user_id, phone)
-
     keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("◀️ Back to Dashboard", callback_data="dashboard")]])
-    await query.edit_message_text(
-        f"✅ Account `{phone}` has been removed successfully.",
-        parse_mode="Markdown",
+    await safe_edit(
+        query,
+        f"✅ Account <code>{phone}</code> removed successfully.",
         reply_markup=keyboard,
+        parse_mode="HTML",
     )
 
 
@@ -84,16 +82,22 @@ async def analytics_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     stats = await db.get_broadcast_stats(user_id)
     accounts = await db.get_accounts(user_id)
     running = await db.is_ads_running(user_id)
+    interval = await db.get_interval(user_id)
+    mins = interval // 60
+    secs = interval % 60
+    interval_label = f"{mins}m {secs}s" if mins else f"{secs}s"
 
     keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("◀️ Back", callback_data="dashboard")]])
-    await query.edit_message_text(
-        "📈 **Analytics**\n\n"
-        f"• **Total Broadcasts:** `{stats['total']}`\n"
-        f"• **Successful:** `{stats['success']}`\n"
-        f"• **Failed:** `{stats['failed']}`\n"
-        f"• **Active Accounts:** `{len(accounts)}`\n"
-        f"• **Status:** {'▶️ Running' if running else '⏸ Paused'}\n\n"
-        "_Analytics are tracked in real-time via your tracking bot._",
-        parse_mode="Markdown",
+    await safe_edit(
+        query,
+        "📈 <b>Analytics</b>\n\n"
+        f"• <b>Total Broadcasts:</b> <code>{stats['total']}</code>\n"
+        f"• <b>Successful:</b> <code>{stats['success']}</code>\n"
+        f"• <b>Failed:</b> <code>{stats['failed']}</code>\n"
+        f"• <b>Active Accounts:</b> <code>{len(accounts)}</code>\n"
+        f"• <b>Interval:</b> <code>{interval_label}</code>\n"
+        f"• <b>Status:</b> {'▶️ Running' if running else '⏸ Paused'}\n\n"
+        "<i>Analytics are tracked in real-time via your tracking bot.</i>",
         reply_markup=keyboard,
+        parse_mode="HTML",
     )

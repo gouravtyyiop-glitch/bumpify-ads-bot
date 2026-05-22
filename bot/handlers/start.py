@@ -4,45 +4,52 @@ from bot.config import START_IMAGE_URL, START_CAPTION, TRACKING_BOT_USERNAME, WE
 from bot.utils import db
 
 
-async def start_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user = update.effective_user
-    await db.upsert_user(user.id, {"user_id": user.id, "username": user.username, "name": user.full_name})
-
-    tracking_msg = ""
-    if TRACKING_BOT_USERNAME:
-        tracking_msg = (
-            f"\n\n⚠️ *Important:* Please start @{TRACKING_BOT_USERNAME} first before running ads.\n"
-            "This bot tracks all your broadcast analytics."
-        )
-
-    caption = START_CAPTION + tracking_msg
-
-    keyboard = InlineKeyboardMarkup([
+def _build_start_keyboard():
+    second_row = [InlineKeyboardButton("📖 FAQ", callback_data="faq")]
+    if WEB_APP_URL:
+        second_row.append(InlineKeyboardButton("🌐 Web Panel", web_app=WebAppInfo(url=WEB_APP_URL)))
+    return InlineKeyboardMarkup([
         [InlineKeyboardButton("🚀 Open Dashboard", callback_data="dashboard")],
-        [
-            InlineKeyboardButton("📖 FAQ", callback_data="faq"),
-            InlineKeyboardButton("📊 Updates", url="https://t.me/bumpify_updates") if not WEB_APP_URL else InlineKeyboardButton("🌐 Web Panel", web_app=WebAppInfo(url=WEB_APP_URL)),
-        ],
+        second_row,
         [InlineKeyboardButton("❓ How To Use", callback_data="howto")],
     ])
 
-    try:
-        if START_IMAGE_URL:
+
+def _build_caption():
+    caption = START_CAPTION
+    if TRACKING_BOT_USERNAME:
+        caption += (
+            f"\n\n⚠️ <b>Important:</b> Start @{TRACKING_BOT_USERNAME} first before running ads "
+            "so it can send you broadcast analytics."
+        )
+    return caption
+
+
+async def start_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    await db.upsert_user(user.id, {
+        "user_id": user.id,
+        "username": user.username,
+        "name": user.full_name,
+    })
+
+    caption = _build_caption()
+    keyboard = _build_start_keyboard()
+
+    if START_IMAGE_URL:
+        try:
             await update.message.reply_photo(
                 photo=START_IMAGE_URL,
                 caption=caption,
-                parse_mode="Markdown",
+                parse_mode="HTML",
                 reply_markup=keyboard,
             )
-        else:
-            await update.message.reply_text(
-                caption,
-                parse_mode="Markdown",
-                reply_markup=keyboard,
-            )
-    except Exception:
-        await update.message.reply_text(
-            caption,
-            parse_mode="Markdown",
-            reply_markup=keyboard,
-        )
+            return
+        except Exception:
+            pass
+
+    await update.message.reply_text(
+        caption,
+        parse_mode="HTML",
+        reply_markup=keyboard,
+    )

@@ -3,24 +3,23 @@ from pyrogram import Client
 from pyrogram.errors import FloodWait, ChatWriteForbidden, UserBannedInChannel
 from bot.utils.session_manager import get_pyrogram_client
 from bot.utils import db
-from bot.config import ENCRYPTION_KEY, TRACKING_BOT_TOKEN
 import telegram
-
 
 _active_tasks: dict[int, asyncio.Task] = {}
 
 
 async def send_tracking(owner_id: int, text: str):
+    from bot.config import TRACKING_BOT_TOKEN
     if not TRACKING_BOT_TOKEN:
         return
     try:
         bot = telegram.Bot(token=TRACKING_BOT_TOKEN)
-        await bot.send_message(chat_id=owner_id, text=text, parse_mode="Markdown")
+        await bot.send_message(chat_id=owner_id, text=text, parse_mode="HTML")
     except Exception:
         pass
 
 
-async def broadcast_for_user(owner_id: int, ad_text: str, mode: str, tracking_chat_id: int):
+async def broadcast_for_user(owner_id: int, ad_text: str, mode: str):
     accounts = await db.get_accounts(owner_id)
     if not accounts:
         return
@@ -45,7 +44,7 @@ async def broadcast_for_user(owner_id: int, ad_text: str, mode: str, tracking_ch
                     try:
                         if mode == "forward":
                             saved = await client.get_messages("me", limit=1)
-                            if saved:
+                            if saved and saved[0].text:
                                 await client.forward_messages(
                                     chat_id=group.id,
                                     from_chat_id="me",
@@ -58,7 +57,7 @@ async def broadcast_for_user(owner_id: int, ad_text: str, mode: str, tracking_ch
 
                         await db.log_broadcast(owner_id, acc["phone"], str(group.id), True)
                         total_success += 1
-                        await asyncio.sleep(2)
+                        await asyncio.sleep(3)
 
                     except FloodWait as e:
                         await asyncio.sleep(e.value)
@@ -80,28 +79,35 @@ async def broadcast_for_user(owner_id: int, ad_text: str, mode: str, tracking_ch
 
         except Exception as e:
             await send_tracking(
-                tracking_chat_id,
-                f"⚠️ *Account Error*\n📱 `{acc['phone']}`\n❌ {str(e)[:200]}",
+                owner_id,
+                f"⚠️ <b>Account Error</b>\n📱 <code>{acc['phone']}</code>\n❌ {str(e)[:200]}",
             )
 
+    interval = await db.get_interval(owner_id)
+    mins = interval // 60
+    secs = interval % 60
+    time_str = f"{mins}m {secs}s" if mins else f"{secs}s"
+
     await send_tracking(
-        tracking_chat_id,
-        f"📊 *Broadcast Cycle Complete*\n"
-        f"✅ Success: `{total_success}`\n"
-        f"❌ Failed: `{total_failed}`\n"
-        f"📱 Accounts Used: `{len(accounts)}`",
+        owner_id,
+        f"📊 <b>Broadcast Cycle Complete</b>\n"
+        f"✅ Success: <code>{total_success}</code>\n"
+        f"❌ Failed: <code>{total_failed}</code>\n"
+        f"📱 Accounts: <code>{len(accounts)}</code>\n"
+        f"⏱ Next cycle in: <code>{time_str}</code>",
     )
 
 
-async def start_broadcast(owner_id: int, interval: int = 300):
+async def start_broadcast(owner_id: int):
     await db.set_ads_running(owner_id, True)
 
     async def run():
         while await db.is_ads_running(owner_id):
             ad_text = await db.get_ad_text(owner_id)
             mode = await db.get_broadcast_mode(owner_id)
+            interval = await db.get_interval(owner_id)
             if ad_text:
-                await broadcast_for_user(owner_id, ad_text, mode, owner_id)
+                await broadcast_for_user(owner_id, ad_text, mode)
             await asyncio.sleep(interval)
 
     task = asyncio.create_task(run())

@@ -5,6 +5,7 @@ from bot.config import BOT_TOKEN
 from bot.handlers.start import start_handler
 from bot.handlers.dashboard import dashboard_handler
 from bot.handlers.ads import handle_ad_text
+from bot.handlers.interval import handle_interval_text
 from bot.handlers.callbacks import callback_handler
 from bot.utils import db
 from tracking_bot.handlers import build_tracking_app
@@ -19,10 +20,11 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 
 
 async def message_handler(update, context):
-    if update.message:
-        handled = await handle_ad_text(update, context)
-        if not handled:
-            pass
+    if not update.message:
+        return
+    if await handle_interval_text(update, context):
+        return
+    await handle_ad_text(update, context)
 
 
 def build_main_app() -> Application:

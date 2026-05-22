@@ -33,10 +33,6 @@ async def upsert_user(user_id: int, data: dict):
     )
 
 
-async def set_ad_text(user_id: int, text: str):
-    await upsert_user(user_id, {"ad_text": text, "ad_text_entities": []})
-
-
 async def set_ad_message(user_id: int, text: str, entities: list):
     await upsert_user(user_id, {"ad_text": text, "ad_entities": entities})
 
@@ -57,6 +53,17 @@ async def get_broadcast_mode(user_id: int) -> str:
     return "direct"
 
 
+async def set_interval(user_id: int, seconds: int):
+    await upsert_user(user_id, {"interval": seconds})
+
+
+async def get_interval(user_id: int) -> int:
+    user = await get_user(user_id)
+    if user:
+        return int(user.get("interval", 300))
+    return 300
+
+
 async def set_ads_running(user_id: int, running: bool):
     await upsert_user(user_id, {"ads_running": running})
 
@@ -73,6 +80,15 @@ async def set_waiting_for_ad(user_id: int, value: bool):
 async def is_waiting_for_ad(user_id: int) -> bool:
     user = await get_user(user_id)
     return user.get("waiting_for_ad", False) if user else False
+
+
+async def set_waiting_for_interval(user_id: int, value: bool):
+    await upsert_user(user_id, {"waiting_for_interval": value})
+
+
+async def is_waiting_for_interval(user_id: int) -> bool:
+    user = await get_user(user_id)
+    return user.get("waiting_for_interval", False) if user else False
 
 
 async def add_account(owner_id: int, phone: str, session_encrypted: str, name: str):
