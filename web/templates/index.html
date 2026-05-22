@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bumpify — Account Panel</title>
+<link rel="stylesheet" href="/static/style.css">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+<div class="app">
+  <header class="header">
+    <div class="logo">⚡ Bumpify</div>
+    <div class="subtitle">Account Manager</div>
+  </header>
+
+  <div id="main-screen" class="screen active">
+    <div class="section-title">Your Accounts</div>
+    <div id="accounts-list" class="accounts-list">
+      <div class="loading">Loading accounts...</div>
+    </div>
+    <button class="btn btn-primary" onclick="showAddScreen()">➕ Add New Account</button>
+  </div>
+
+  <div id="add-screen" class="screen">
+    <div class="back-btn" onclick="showMainScreen()">← Back</div>
+    <div class="section-title">Add Account</div>
+
+    <div id="step-phone" class="step active">
+      <div class="field-label">Phone Number</div>
+      <div class="input-group">
+        <span class="prefix">+</span>
+        <input type="tel" id="phone-input" placeholder="91XXXXXXXXXX" inputmode="tel">
+      </div>
+      <div class="hint">Enter with country code (e.g. 91XXXXXXXXXX for India)</div>
+      <button class="btn btn-primary" onclick="sendOtp()">Send OTP</button>
+    </div>
+
+    <div id="step-otp" class="step">
+      <div class="field-label">Enter OTP</div>
+      <input type="text" id="otp-input" placeholder="12345" maxlength="6" inputmode="numeric">
+      <div class="hint">Code sent to your phone via Telegram</div>
+      <div id="step-2fa" style="display:none;">
+        <div class="field-label" style="margin-top:16px;">2FA Password</div>
+        <input type="password" id="password-input" placeholder="Your 2FA password">
+      </div>
+      <button class="btn btn-primary" onclick="verifyOtp()">Verify & Add</button>
+      <button class="btn btn-outline" onclick="goBackToPhone()">Change Number</button>
+    </div>
+  </div>
+
+  <div id="success-screen" class="screen">
+    <div class="success-icon">✅</div>
+    <div class="success-title">Account Added!</div>
+    <div class="success-sub" id="success-name"></div>
+    <div class="success-note">"-Bumpify" has been added to the account name and bio has been updated.</div>
+    <button class="btn btn-primary" onclick="showMainScreen()">View All Accounts</button>
+  </div>
+
+  <div id="toast" class="toast"></div>
+  <div id="loader" class="loader-overlay" style="display:none;">
+    <div class="spinner"></div>
+  </div>
+</div>
+<script src="/static/app.js"></script>
+</body>
+</html>
