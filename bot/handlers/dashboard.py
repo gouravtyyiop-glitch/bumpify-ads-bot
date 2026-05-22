@@ -18,8 +18,7 @@ async def dashboard_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ad_status = "✅ Set" if ad_text else "❌ Not Set"
     running_status = "▶️ Running" if running else "⏸ Paused"
     mode_label = "📤 Forward" if mode == "forward" else "📨 Direct"
-    mins = interval // 60
-    secs = interval % 60
+    mins, secs = divmod(interval, 60)
     interval_label = f"{mins}m {secs}s" if mins else f"{secs}s"
 
     text = (
@@ -48,7 +47,6 @@ async def dashboard_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ])
 
     if query:
-        await query.answer()
-        await safe_edit(query, text, reply_markup=keyboard, parse_mode="HTML")
+        await safe_edit(query, text, reply_markup=keyboard, parse_mode="HTML", context=context)
     else:
         await update.message.reply_text(text, parse_mode="HTML", reply_markup=keyboard)

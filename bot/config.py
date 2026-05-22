@@ -14,18 +14,14 @@ LAST_NAME_SUFFIX = os.getenv("LAST_NAME_SUFFIX", "-Bumpify")
 BIO_TEXT = os.getenv("BIO_TEXT", "Managed by Bumpify | Telegram Ad Automation")
 START_IMAGE_URL = os.getenv("START_IMAGE_URL", "")
 
-_raw_caption = os.getenv("START_CAPTION", "")
-if _raw_caption:
-    START_CAPTION = _raw_caption.replace("\\n", "\n")
-else:
-    START_CAPTION = (
-        "**\U0001f680 Welcome to Bumpify Ads Bot**\n\n"
-        "The most powerful Telegram group advertising automation.\n\n"
-        "\u2022 **Premium Ad Broadcasting**\n"
-        "\u2022 **Smart Delays & Flood Protection**\n"
-        "\u2022 **Multi-Account Support**\n"
-        "\u2022 **Real-Time Analytics**"
-    )
+START_CAPTION = (
+    "<b>\U0001f680 Welcome to Bumpify Ads Bot</b>\n\n"
+    "The most powerful Telegram group advertising automation.\n\n"
+    "\u2022 <b>Premium Ad Broadcasting</b>\n"
+    "\u2022 <b>Smart Delays &amp; Flood Protection</b>\n"
+    "\u2022 <b>Multi-Account Support</b>\n"
+    "\u2022 <b>Real-Time Analytics</b>"
+)
 
 TRACKING_BOT_USERNAME = os.getenv("TRACKING_BOT_USERNAME", "")
 WEB_APP_URL = os.getenv("WEB_APP_URL", "")

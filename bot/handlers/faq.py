@@ -2,7 +2,6 @@ from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes
 from bot.utils.helpers import safe_edit
 
-
 FAQ_TEXT = (
     "❓ <b>Frequently Asked Questions</b>\n\n"
     "<b>Q: How do I add a Telegram account?</b>\n"
@@ -12,31 +11,28 @@ FAQ_TEXT = (
     "<b>Q: Will it send to channels?</b>\n"
     "No. Bumpify only broadcasts to <b>groups</b> — channels are skipped automatically.\n\n"
     "<b>Q: What is Forward vs Direct mode?</b>\n"
-    "<b>Direct</b> sends the message fresh each time.\n"
-    "<b>Forward</b> forwards your last saved message (shows 'Forwarded from' tag).\n\n"
+    "<b>Direct</b> sends fresh each time. <b>Forward</b> forwards your last saved message.\n\n"
     "<b>Q: Is my account safe?</b>\n"
-    "Yes. All sessions are encrypted with AES-256 before storage. Passwords are never stored.\n\n"
+    "Yes. All sessions are encrypted with AES-256. Passwords are never stored.\n\n"
     "<b>Q: What does the tracking bot do?</b>\n"
     "It sends real-time analytics — success/failed counts after each broadcast cycle.\n\n"
     "<b>Q: Can I add unlimited accounts?</b>\n"
-    "Yes — no limit on how many accounts you can add.\n\n"
+    "Yes — no limit.\n\n"
     "<b>Q: How do I set the broadcast interval?</b>\n"
-    "Tap <b>Set Interval</b> on the dashboard. Choose a preset or type a custom value in seconds.\n\n"
+    "Tap <b>Set Interval</b> on the dashboard and choose a preset or type custom seconds.\n\n"
     "<b>Q: Does formatting work in my ads?</b>\n"
-    "Yes. Send your message with any Telegram formatting — bold, italic, code, blockquote, etc."
+    "Yes. Telegram supports bold, italic, code, blockquote, underline, strikethrough in messages."
 )
 
 
 async def faq_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
-    await query.answer()
     keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("◀️ Back", callback_data="home")]])
-    await safe_edit(query, FAQ_TEXT, reply_markup=keyboard, parse_mode="HTML")
+    await safe_edit(query, FAQ_TEXT, reply_markup=keyboard, parse_mode="HTML", context=context)
 
 
 async def howto_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
-    await query.answer()
     text = (
         "📖 <b>How To Use Bumpify</b>\n\n"
         "<b>Step 1</b> — Add your Telegram account\n"
@@ -48,11 +44,9 @@ async def howto_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "<b>Step 4</b> — Choose send mode\n"
         "<b>Direct</b> (default) or <b>Forward</b> — toggle from dashboard\n\n"
         "<b>Step 5</b> — Start the tracking bot\n"
-        "Message the tracking bot so it can send you analytics\n\n"
+        "Message your tracking bot so it can send you analytics\n\n"
         "<b>Step 6</b> — Start Ads\n"
-        "Tap <b>Start Ads</b> — broadcasting begins across all your groups\n\n"
-        "<b>Step 7</b> — Monitor\n"
-        "Check <b>Analytics</b> for real-time success/fail counts"
+        "Tap <b>Start Ads</b> — broadcasting begins across all your groups automatically"
     )
     keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("◀️ Back", callback_data="home")]])
-    await safe_edit(query, text, reply_markup=keyboard, parse_mode="HTML")
+    await safe_edit(query, text, reply_markup=keyboard, parse_mode="HTML", context=context)

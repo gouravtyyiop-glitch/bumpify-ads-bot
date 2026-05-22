@@ -8,7 +8,6 @@ from bot.utils.broadcaster import start_broadcast, stop_broadcast
 async def set_ad_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     user_id = update.effective_user.id
-    await query.answer()
     await db.set_waiting_for_ad(user_id, True)
     keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("❌ Cancel", callback_data="dashboard")]])
     await safe_edit(
@@ -19,18 +18,16 @@ async def set_ad_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "📝 Just type or paste your message now.",
         reply_markup=keyboard,
         parse_mode="HTML",
+        context=context,
     )
 
 
 async def handle_ad_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> bool:
     user_id = update.effective_user.id
-
     if not await db.is_waiting_for_ad(user_id):
         return False
 
-    msg = update.message
-    text = msg.text or msg.caption or ""
-
+    text = update.message.text or update.message.caption or ""
     if not text:
         await update.message.reply_text("❌ Please send a text message for the ad.")
         return True
@@ -39,9 +36,7 @@ async def handle_ad_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     await db.set_waiting_for_ad(user_id, False)
 
     preview = text[:300] + ("..." if len(text) > 300 else "")
-    keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("🚀 Go to Dashboard", callback_data="dashboard")]
-    ])
+    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("🚀 Go to Dashboard", callback_data="dashboard")]])
     await update.message.reply_text(
         f"✅ <b>Ad message saved!</b>\n\n"
         f"📝 Preview:\n<code>{preview}</code>\n\n"
@@ -58,7 +53,8 @@ async def start_ads_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     ad_text = await db.get_ad_text(user_id)
     if not ad_text:
-        await query.answer(
+        await context.bot.answer_callback_query(
+            query.id,
             "⚠️ Ad message not set! Go to Set Ad Message first.",
             show_alert=True,
         )
@@ -66,22 +62,20 @@ async def start_ads_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     accounts = await db.get_accounts(user_id)
     if not accounts:
-        await query.answer(
+        await context.bot.answer_callback_query(
+            query.id,
             "⚠️ No accounts added! Add at least one account first.",
             show_alert=True,
         )
         return
 
     if await db.is_ads_running(user_id):
-        await query.answer("Ads are already running!", show_alert=True)
+        await context.bot.answer_callback_query(query.id, "Ads are already running!", show_alert=True)
         return
 
-    await query.answer()
     await start_broadcast(user_id)
-
     interval = await db.get_interval(user_id)
-    mins = interval // 60
-    secs = interval % 60
+    mins, secs = divmod(interval, 60)
     interval_label = f"{mins}m {secs}s" if mins else f"{secs}s"
 
     keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("📊 Dashboard", callback_data="dashboard")]])
@@ -93,14 +87,13 @@ async def start_ads_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Use the dashboard to monitor or stop.",
         reply_markup=keyboard,
         parse_mode="HTML",
+        context=context,
     )
 
 
 async def stop_ads_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     user_id = update.effective_user.id
-    await query.answer()
-
     await stop_broadcast(user_id)
     keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("📊 Dashboard", callback_data="dashboard")]])
     await safe_edit(
@@ -108,18 +101,16 @@ async def stop_ads_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "⏹ <b>Ads Stopped.</b>\n\nBroadcasting has been paused. Start again from the dashboard.",
         reply_markup=keyboard,
         parse_mode="HTML",
+        context=context,
     )
 
 
 async def toggle_mode_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     user_id = update.effective_user.id
-    await query.answer()
-
     current = await db.get_broadcast_mode(user_id)
     new_mode = "forward" if current == "direct" else "direct"
     await db.set_broadcast_mode(user_id, new_mode)
-
     label = "📤 Forward Mode" if new_mode == "forward" else "📨 Direct Mode"
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton("🔁 Switch Again", callback_data="toggle_mode")],
@@ -128,9 +119,10 @@ async def toggle_mode_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
     await safe_edit(
         query,
         f"✅ <b>Mode changed to {label}</b>\n\n"
-        "• <b>Direct</b> — Sends the message fresh (default)\n"
+        "• <b>Direct</b> — Sends the message fresh each time (default)\n"
         "• <b>Forward</b> — Forwards your last saved message\n\n"
         f"Current: <b>{label}</b>",
         reply_markup=keyboard,
         parse_mode="HTML",
+        context=context,
     )
