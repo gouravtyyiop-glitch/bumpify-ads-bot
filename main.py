@@ -39,14 +39,22 @@ def build_main_app() -> Application:
 async def run_bot(app: Application):
     await app.initialize()
     await app.start()
-    await app.updater.start_polling(drop_pending_updates=True)
+    await app.bot.delete_webhook(drop_pending_updates=True)
+    await app.updater.start_polling(
+        drop_pending_updates=True,
+        allowed_updates=["message", "callback_query", "edited_message", "channel_post"],
+    )
     logging.info("Main bot started")
 
 
 async def run_tracking(app: Application):
     await app.initialize()
     await app.start()
-    await app.updater.start_polling(drop_pending_updates=True)
+    await app.bot.delete_webhook(drop_pending_updates=True)
+    await app.updater.start_polling(
+        drop_pending_updates=True,
+        allowed_updates=["message", "callback_query"],
+    )
     logging.info("Tracking bot started")
 
 
