@@ -173,9 +173,7 @@ async def toggle_account_active(owner_id: int, phone: str) -> bool:
 
 
 async def remove_account(owner_id: int, phone: str):
-    await get_db().accounts.update_one(
-        {"owner_id": owner_id, "phone": phone}, {"$set": {"active": False}}
-    )
+    await get_db().accounts.delete_one({"owner_id": owner_id, "phone": phone})
 
 
 async def log_broadcast(owner_id: int, account_phone: str, account_num: int,

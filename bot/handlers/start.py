@@ -15,14 +15,14 @@ async def start_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "to receive real-time broadcast analytics.</blockquote>"
         )
 
-    second_row = [InlineKeyboardButton("FAQ", callback_data="faq")]
+    second_row = [InlineKeyboardButton("FAQ", callback_data="faq", api_kwargs={"style": "danger"})]
     if WEB_APP_URL:
-        second_row.append(InlineKeyboardButton("Web Panel", web_app=WebAppInfo(url=WEB_APP_URL)))
+        second_row.append(InlineKeyboardButton("Web Panel", web_app=WebAppInfo(url=WEB_APP_URL), api_kwargs={"style": "danger"}))
 
     keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("Open Dashboard", callback_data="dashboard")],
+        [InlineKeyboardButton("Open Dashboard", callback_data="dashboard", api_kwargs={"style": "success"})],
         second_row,
-        [InlineKeyboardButton("How To Use", callback_data="howto")],
+        [InlineKeyboardButton("How To Use", callback_data="howto", api_kwargs={"style": "primary"})],
     ])
 
     if START_IMAGE_URL:

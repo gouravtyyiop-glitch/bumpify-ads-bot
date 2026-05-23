@@ -1,11 +1,25 @@
+import asyncio
 import logging
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes
 from bot.utils import db
 from bot.utils.helpers import safe_edit
-from bot.utils.broadcaster import start_broadcast, stop_broadcast
+from bot.utils.broadcaster import start_broadcast, stop_broadcast, _send_ad_via_pyrogram
+from bot.utils.session_manager import get_pyrogram_client
 
 logger = logging.getLogger(__name__)
+
+
+async def _save_ad_to_saved_messages(owner_id: int, ad_data: dict):
+    accounts = await db.get_accounts(owner_id)
+    for acc in accounts:
+        try:
+            client = await get_pyrogram_client(acc["session"])
+            async with client:
+                await _send_ad_via_pyrogram(client, "me", ad_data)
+        except Exception as e:
+            logger.warning("save_to_saved_messages failed [%s]: %s", acc["phone"], e)
+    await db.set_broadcast_mode(owner_id, "forward")
 
 
 async def set_ad_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -104,6 +118,7 @@ async def handle_ad_message(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         ad_data["forwarded"] = True
 
     await db.set_ad_message_data(user_id, ad_data)
+    asyncio.create_task(_save_ad_to_saved_messages(user_id, ad_data))
 
     try:
         await msg.delete()

@@ -102,7 +102,7 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await safe_edit(
                 query,
                 "<b>Something went wrong.</b>\nPlease try again.",
-                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Home", callback_data="home")]]),
+                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Home", callback_data="home", api_kwargs={"style": "danger"})]]),
                 parse_mode="HTML",
                 context=context,
             )
@@ -118,13 +118,13 @@ async def _home_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"\n\n<blockquote><b>Important:</b> Start @{TRACKING_BOT_USERNAME} first "
             "to receive real-time broadcast analytics.</blockquote>"
         )
-    second_row = [InlineKeyboardButton("FAQ", callback_data="faq")]
+    second_row = [InlineKeyboardButton("FAQ", callback_data="faq", api_kwargs={"style": "danger"})]
     if WEB_APP_URL:
-        second_row.append(InlineKeyboardButton("Web Panel", web_app=WebAppInfo(url=WEB_APP_URL)))
+        second_row.append(InlineKeyboardButton("Web Panel", web_app=WebAppInfo(url=WEB_APP_URL), api_kwargs={"style": "danger"}))
     keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("Open Dashboard", callback_data="dashboard")],
+        [InlineKeyboardButton("Open Dashboard", callback_data="dashboard", api_kwargs={"style": "success"})],
         second_row,
-        [InlineKeyboardButton("How To Use", callback_data="howto")],
+        [InlineKeyboardButton("How To Use", callback_data="howto", api_kwargs={"style": "primary"})],
     ])
     await safe_edit(query, caption, reply_markup=keyboard, parse_mode="HTML", context=context)
 

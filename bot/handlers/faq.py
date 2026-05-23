@@ -43,6 +43,6 @@ async def howto_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton("FAQ", callback_data="faq")],
-        [InlineKeyboardButton("Dashboard", callback_data="dashboard")],
+        [InlineKeyboardButton("Home", callback_data="home", api_kwargs={"style": "danger"})],
     ])
     await safe_edit(query, HOWTO_TEXT, reply_markup=keyboard, parse_mode="HTML", context=context)

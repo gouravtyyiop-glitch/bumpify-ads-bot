@@ -1,12 +1,11 @@
 import asyncio
 import logging
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters
-from bot.config import BOT_TOKEN
+from bot.config import BOT_TOKEN, TRACKING_BOT_TOKEN, PRIVATE_MODE, OWNER_ID
 from bot.handlers.start import start_handler
 from bot.handlers.dashboard import dashboard_handler
 from bot.handlers.callbacks import callback_handler
 from bot.utils import db
-from tracking_bot.handlers import build_tracking_app
 from web.app import run_web
 
 logging.basicConfig(
@@ -18,8 +17,18 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 
+def _is_allowed(update) -> bool:
+    if not PRIVATE_MODE or not OWNER_ID:
+        return True
+    user = update.effective_user
+    return user is not None and user.id == OWNER_ID
+
+
 async def message_handler(update, context):
     if not update.message:
+        return
+    if not _is_allowed(update):
+        await update.message.reply_text("⛔ This bot is in private mode.")
         return
     from bot.handlers.interval import handle_interval_text
     if await handle_interval_text(update, context):
@@ -31,6 +40,30 @@ async def message_handler(update, context):
     await handle_ad_message(update, context)
 
 
+async def guarded_start_handler(update, context):
+    if not _is_allowed(update):
+        await update.message.reply_text("⛔ This bot is in private mode.")
+        return
+    await start_handler(update, context)
+
+
+async def guarded_dashboard_handler(update, context):
+    if not _is_allowed(update):
+        await update.message.reply_text("⛔ This bot is in private mode.")
+        return
+    await dashboard_handler(update, context)
+
+
+async def guarded_callback_handler(update, context):
+    if not _is_allowed(update):
+        try:
+            await update.callback_query.answer("⛔ This bot is in private mode.", show_alert=True)
+        except Exception:
+            pass
+        return
+    await callback_handler(update, context)
+
+
 def build_main_app() -> Application:
     app = (
         Application.builder()
@@ -38,9 +71,9 @@ def build_main_app() -> Application:
         .concurrent_updates(True)
         .build()
     )
-    app.add_handler(CommandHandler("start", start_handler))
-    app.add_handler(CommandHandler("dashboard", dashboard_handler))
-    app.add_handler(CallbackQueryHandler(callback_handler))
+    app.add_handler(CommandHandler("start", guarded_start_handler))
+    app.add_handler(CommandHandler("dashboard", guarded_dashboard_handler))
+    app.add_handler(CallbackQueryHandler(guarded_callback_handler))
     app.add_handler(MessageHandler(
         (
             filters.TEXT
@@ -85,11 +118,15 @@ async def main():
     logging.info("MongoDB connected")
 
     main_app = build_main_app()
-    tracking_app = build_tracking_app()
     web_runner = await run_web()
 
     await run_bot(main_app)
-    await run_tracking(tracking_app)
+
+    tracking_app = None
+    if TRACKING_BOT_TOKEN:
+        from tracking_bot.handlers import build_tracking_app
+        tracking_app = build_tracking_app()
+        await run_tracking(tracking_app)
 
     logging.info("All services running. Press Ctrl+C to stop.")
 
@@ -101,9 +138,10 @@ async def main():
         await main_app.updater.stop()
         await main_app.stop()
         await main_app.shutdown()
-        await tracking_app.updater.stop()
-        await tracking_app.stop()
-        await tracking_app.shutdown()
+        if tracking_app is not None:
+            await tracking_app.updater.stop()
+            await tracking_app.stop()
+            await tracking_app.shutdown()
         await web_runner.cleanup()
         await db.close()
 
