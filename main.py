@@ -4,8 +4,6 @@ from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQu
 from bot.config import BOT_TOKEN
 from bot.handlers.start import start_handler
 from bot.handlers.dashboard import dashboard_handler
-from bot.handlers.ads import handle_ad_text
-from bot.handlers.interval import handle_interval_text
 from bot.handlers.callbacks import callback_handler
 from bot.utils import db
 from tracking_bot.handlers import build_tracking_app
@@ -17,14 +15,24 @@ logging.basicConfig(
 )
 logging.getLogger("pyrogram").setLevel(logging.WARNING)
 logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 
 async def message_handler(update, context):
     if not update.message:
         return
+
+    from bot.handlers.interval import handle_interval_text
     if await handle_interval_text(update, context):
         return
-    await handle_ad_text(update, context)
+
+    from bot.handlers.auto_reply import handle_auto_reply_text
+    if await handle_auto_reply_text(update, context):
+        return
+
+    from bot.handlers.ads import handle_ad_message
+    if await handle_ad_message(update, context):
+        return
 
 
 def build_main_app() -> Application:
@@ -32,7 +40,12 @@ def build_main_app() -> Application:
     app.add_handler(CommandHandler("start", start_handler))
     app.add_handler(CommandHandler("dashboard", dashboard_handler))
     app.add_handler(CallbackQueryHandler(callback_handler))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler))
+    app.add_handler(MessageHandler(
+        (filters.TEXT | filters.PHOTO | filters.VIDEO | filters.Document.ALL |
+         filters.AUDIO | filters.ANIMATION | filters.Sticker.ALL |
+         filters.VOICE | filters.VIDEO_NOTE) & ~filters.COMMAND,
+        message_handler,
+    ))
     return app
 
 
@@ -42,7 +55,7 @@ async def run_bot(app: Application):
     await app.bot.delete_webhook(drop_pending_updates=True)
     await app.updater.start_polling(
         drop_pending_updates=True,
-        allowed_updates=["message", "callback_query", "edited_message", "channel_post"],
+        allowed_updates=["message", "callback_query", "edited_message"],
     )
     logging.info("Main bot started")
 

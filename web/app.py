@@ -1,10 +1,9 @@
-import asyncio
-import json
+import os
 from aiohttp import web
 from bot.utils import db
 from bot.utils.session_manager import start_login, complete_login
-from bot.config import WEB_PORT
 
+WEB_PORT = int(os.environ.get("WEB_PORT", os.environ.get("PORT", "3000")))
 
 routes = web.RouteTableDef()
 
@@ -24,13 +23,17 @@ async def panel(request: web.Request):
 @routes.get("/static/{filename}")
 async def static_files(request: web.Request):
     filename = request.match_info["filename"]
-    import os
     filepath = f"web/static/{filename}"
     if not os.path.exists(filepath):
         raise web.HTTPNotFound()
     with open(filepath, "rb") as f:
         content = f.read()
-    ct = "text/css" if filename.endswith(".css") else "application/javascript"
+    if filename.endswith(".css"):
+        ct = "text/css"
+    elif filename.endswith(".js"):
+        ct = "application/javascript"
+    else:
+        ct = "application/octet-stream"
     return web.Response(body=content, content_type=ct)
 
 
@@ -59,8 +62,22 @@ async def verify_otp(request: web.Request):
         if not phone or not user_id or not code:
             return web.json_response({"ok": False, "error": "Missing fields"})
         result = await complete_login(phone, user_id, code, password)
-        await db.add_account(user_id, result["phone"], result["session"], result["name"])
-        return web.json_response({"ok": True, "name": result["name"]})
+        await db.add_account(
+            user_id,
+            result["phone"],
+            result["session"],
+            result["name"],
+            username=result.get("username", ""),
+            tg_user_id=result.get("tg_user_id", 0),
+            photo_id=result.get("photo_id", ""),
+        )
+        return web.json_response({
+            "ok": True,
+            "name": result["name"],
+            "username": result.get("username", ""),
+            "tg_user_id": result.get("tg_user_id", 0),
+            "phone": result["phone"],
+        })
     except ValueError as e:
         msg = str(e)
         if msg == "2FA_REQUIRED":
@@ -77,7 +94,16 @@ async def get_accounts(request: web.Request):
         if not user_id:
             return web.json_response({"ok": False, "error": "Missing user_id"})
         accounts = await db.get_accounts(user_id)
-        result = [{"name": a["name"], "phone": a["phone"]} for a in accounts]
+        result = [
+            {
+                "name": a["name"],
+                "phone": a["phone"],
+                "username": a.get("username", ""),
+                "tg_user_id": a.get("tg_user_id", 0),
+                "photo_id": a.get("photo_id", ""),
+            }
+            for a in accounts
+        ]
         return web.json_response({"ok": True, "accounts": result})
     except Exception as e:
         return web.json_response({"ok": False, "error": str(e)})

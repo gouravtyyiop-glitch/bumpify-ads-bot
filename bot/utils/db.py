@@ -33,13 +33,33 @@ async def upsert_user(user_id: int, data: dict):
     )
 
 
-async def set_ad_message(user_id: int, text: str, entities: list):
-    await upsert_user(user_id, {"ad_text": text, "ad_entities": entities})
+async def set_ad_message_data(user_id: int, data: dict):
+    await upsert_user(user_id, {"ad_msg": data})
+
+
+async def get_ad_message_data(user_id: int) -> dict | None:
+    user = await get_user(user_id)
+    return user.get("ad_msg") if user else None
 
 
 async def get_ad_text(user_id: int) -> str | None:
+    data = await get_ad_message_data(user_id)
+    if not data:
+        return None
+    if data.get("type") == "text":
+        return data.get("text")
+    return data.get("caption") or f"[{data.get('type', 'media')}]"
+
+
+async def set_prompt_message(user_id: int, chat_id: int, msg_id: int):
+    await upsert_user(user_id, {"prompt_chat_id": chat_id, "prompt_msg_id": msg_id})
+
+
+async def get_prompt_message(user_id: int) -> tuple[int, int] | None:
     user = await get_user(user_id)
-    return user.get("ad_text") if user else None
+    if user and user.get("prompt_chat_id"):
+        return user["prompt_chat_id"], user["prompt_msg_id"]
+    return None
 
 
 async def set_broadcast_mode(user_id: int, mode: str):
@@ -48,9 +68,7 @@ async def set_broadcast_mode(user_id: int, mode: str):
 
 async def get_broadcast_mode(user_id: int) -> str:
     user = await get_user(user_id)
-    if user:
-        return user.get("broadcast_mode", "direct")
-    return "direct"
+    return user.get("broadcast_mode", "direct") if user else "direct"
 
 
 async def set_interval(user_id: int, seconds: int):
@@ -59,9 +77,7 @@ async def set_interval(user_id: int, seconds: int):
 
 async def get_interval(user_id: int) -> int:
     user = await get_user(user_id)
-    if user:
-        return int(user.get("interval", 300))
-    return 300
+    return int(user.get("interval", 300)) if user else 300
 
 
 async def set_ads_running(user_id: int, running: bool):
@@ -91,10 +107,45 @@ async def is_waiting_for_interval(user_id: int) -> bool:
     return user.get("waiting_for_interval", False) if user else False
 
 
-async def add_account(owner_id: int, phone: str, session_encrypted: str, name: str):
+async def set_auto_reply_text(user_id: int, text: str):
+    await upsert_user(user_id, {"auto_reply_text": text})
+
+
+async def get_auto_reply_text(user_id: int) -> str | None:
+    user = await get_user(user_id)
+    return user.get("auto_reply_text") if user else None
+
+
+async def set_auto_reply_enabled(user_id: int, enabled: bool):
+    await upsert_user(user_id, {"auto_reply_enabled": enabled})
+
+
+async def is_auto_reply_enabled(user_id: int) -> bool:
+    user = await get_user(user_id)
+    return user.get("auto_reply_enabled", False) if user else False
+
+
+async def set_waiting_for_auto_reply(user_id: int, value: bool):
+    await upsert_user(user_id, {"waiting_for_auto_reply": value})
+
+
+async def is_waiting_for_auto_reply(user_id: int) -> bool:
+    user = await get_user(user_id)
+    return user.get("waiting_for_auto_reply", False) if user else False
+
+
+async def add_account(owner_id: int, phone: str, session_encrypted: str, name: str,
+                      username: str = "", tg_user_id: int = 0, photo_id: str = ""):
     await get_db().accounts.update_one(
         {"owner_id": owner_id, "phone": phone},
-        {"$set": {"session": session_encrypted, "name": name, "active": True}},
+        {"$set": {
+            "session": session_encrypted,
+            "name": name,
+            "username": username,
+            "tg_user_id": tg_user_id,
+            "photo_id": photo_id,
+            "active": True,
+        }},
         upsert=True,
     )
 
@@ -110,16 +161,19 @@ async def remove_account(owner_id: int, phone: str):
     )
 
 
-async def log_broadcast(owner_id: int, account: str, group: str, success: bool, error: str = ""):
-    await get_db().broadcast_logs.insert_one(
-        {
-            "owner_id": owner_id,
-            "account": account,
-            "group": group,
-            "success": success,
-            "error": error,
-        }
-    )
+async def log_broadcast(owner_id: int, account_phone: str, account_num: int,
+                        group_id: int, group_title: str, group_username: str,
+                        success: bool, error: str = ""):
+    await get_db().broadcast_logs.insert_one({
+        "owner_id": owner_id,
+        "account_phone": account_phone,
+        "account_num": account_num,
+        "group_id": group_id,
+        "group_title": group_title,
+        "group_username": group_username,
+        "success": success,
+        "error": error,
+    })
 
 
 async def get_broadcast_stats(owner_id: int) -> dict:
@@ -127,3 +181,9 @@ async def get_broadcast_stats(owner_id: int) -> dict:
     success = await get_db().broadcast_logs.count_documents({"owner_id": owner_id, "success": True})
     failed = total - success
     return {"total": total, "success": success, "failed": failed}
+
+
+async def upsert_user_check(user_id: int, data: dict):
+    await get_db().users.update_one(
+        {"user_id": user_id}, {"$set": data}, upsert=True
+    )

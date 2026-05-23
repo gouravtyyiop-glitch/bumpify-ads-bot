@@ -23,6 +23,11 @@ START_CAPTION = (
     "\u2022 <b>Real-Time Analytics</b>"
 )
 
+AUTO_REPLY_TEXT = os.getenv(
+    "AUTO_REPLY_TEXT",
+    "I'm currently offline. Please drop your message and I'll get back to you soon."
+)
+
 TRACKING_BOT_USERNAME = os.getenv("TRACKING_BOT_USERNAME", "")
 WEB_APP_URL = os.getenv("WEB_APP_URL", "")
 WEB_PORT = int(os.getenv("WEB_PORT", os.getenv("PORT", "3000")))

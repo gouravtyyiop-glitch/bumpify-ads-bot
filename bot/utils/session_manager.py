@@ -1,4 +1,3 @@
-import asyncio
 from pyrogram import Client
 from pyrogram.errors import SessionPasswordNeeded, PhoneCodeExpired, PhoneCodeInvalid
 from bot.config import API_ID, API_HASH, ENCRYPTION_KEY, LAST_NAME_SUFFIX, BIO_TEXT
@@ -53,13 +52,31 @@ async def complete_login(phone: str, owner_id: int, code: str, password: str = N
         last_name = new_last
 
     full_name = f"{first_name} {last_name}".strip()
+    username = me.username or ""
+    tg_user_id = me.id
+
+    photo_id = ""
+    try:
+        photos = await client.get_profile_photos(me.id, limit=1)
+        if photos:
+            photo_id = str(photos[0].file_id)
+    except Exception:
+        pass
+
     session_string = await client.export_session_string()
     encrypted = encrypt_session(session_string, ENCRYPTION_KEY)
 
     del _pending_sessions[key]
     await client.disconnect()
 
-    return {"name": full_name, "phone": phone, "session": encrypted}
+    return {
+        "name": full_name,
+        "phone": phone,
+        "session": encrypted,
+        "username": username,
+        "tg_user_id": tg_user_id,
+        "photo_id": photo_id,
+    }
 
 
 async def get_pyrogram_client(session_encrypted: str, name: str = "acc") -> Client:
@@ -72,17 +89,3 @@ async def get_pyrogram_client(session_encrypted: str, name: str = "acc") -> Clie
         in_memory=True,
     )
     return client
-
-
-async def get_groups(session_encrypted: str) -> list[dict]:
-    client = await get_pyrogram_client(session_encrypted)
-    groups = []
-    async with client:
-        async for dialog in client.get_dialogs():
-            if dialog.chat.type.name in ("GROUP", "SUPERGROUP"):
-                groups.append({
-                    "id": dialog.chat.id,
-                    "title": dialog.chat.title,
-                    "members": getattr(dialog.chat, "members_count", 0),
-                })
-    return groups

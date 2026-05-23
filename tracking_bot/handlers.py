@@ -1,18 +1,18 @@
-from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
+from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 from bot.config import TRACKING_BOT_TOKEN
 
 
 async def tracking_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "📊 **Bumpify Tracking Bot**\n\n"
-        "✅ You are now registered to receive broadcast analytics.\n\n"
-        "Every time your accounts broadcast messages, you'll get a report here with:\n"
-        "• ✅ Success count\n"
-        "• ❌ Failed count\n"
-        "• 📱 Accounts used\n\n"
-        "_Keep this bot open to receive real-time updates._",
-        parse_mode="Markdown",
+        "<b>Bumpify Tracking Bot</b>\n\n"
+        "You are now registered to receive broadcast analytics.\n\n"
+        "After each broadcast cycle you will receive a report per account with:\n"
+        "  - Success / failed counts\n"
+        "  - Each group name, username, link and ID\n"
+        "  - Next cycle countdown\n\n"
+        "Keep this chat open to receive real-time updates.",
+        parse_mode="HTML",
     )
 
 

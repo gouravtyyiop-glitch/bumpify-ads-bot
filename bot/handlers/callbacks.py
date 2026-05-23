@@ -9,8 +9,13 @@ logger = logging.getLogger(__name__)
 
 async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
-    await query.answer()
+    try:
+        await query.answer()
+    except Exception as e:
+        logger.warning("query.answer failed: %s", e)
+
     data = query.data
+    logger.info("CALLBACK: %s from %s", data, update.effective_user.id)
 
     try:
         if data == "dashboard":
@@ -76,13 +81,25 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         elif data == "add_account":
             await _add_account_fallback(update, context)
 
+        elif data == "auto_reply":
+            from bot.handlers.auto_reply import auto_reply_handler
+            await auto_reply_handler(update, context)
+
+        elif data == "toggle_auto_reply":
+            from bot.handlers.auto_reply import toggle_auto_reply_handler
+            await toggle_auto_reply_handler(update, context)
+
+        elif data == "set_auto_reply_text":
+            from bot.handlers.auto_reply import set_auto_reply_text_handler
+            await set_auto_reply_text_handler(update, context)
+
     except Exception as e:
         logger.error("callback_handler error [%s]: %s", data, e, exc_info=True)
         try:
             await safe_edit(
                 query,
-                "⚠️ <b>Something went wrong.</b>\nPlease try again.",
-                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🏠 Home", callback_data="home")]]),
+                "<b>Something went wrong.</b>\nPlease try again.",
+                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Home", callback_data="home")]]),
                 parse_mode="HTML",
                 context=context,
             )
@@ -95,27 +112,27 @@ async def _home_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     caption = START_CAPTION
     if TRACKING_BOT_USERNAME:
         caption += (
-            f"\n\n⚠️ <b>Important:</b> Start @{TRACKING_BOT_USERNAME} first before running ads "
+            f"\n\n<b>Important:</b> Start @{TRACKING_BOT_USERNAME} first before running ads "
             "so it can send you broadcast analytics."
         )
-    second_row = [InlineKeyboardButton("📖 FAQ", callback_data="faq")]
+    second_row = [InlineKeyboardButton("FAQ", callback_data="faq")]
     if WEB_APP_URL:
-        second_row.append(InlineKeyboardButton("🌐 Web Panel", web_app=WebAppInfo(url=WEB_APP_URL)))
+        second_row.append(InlineKeyboardButton("Web Panel", web_app=WebAppInfo(url=WEB_APP_URL)))
     keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("🚀 Open Dashboard", callback_data="dashboard")],
+        [InlineKeyboardButton("Open Dashboard", callback_data="dashboard")],
         second_row,
-        [InlineKeyboardButton("❓ How To Use", callback_data="howto")],
+        [InlineKeyboardButton("How To Use", callback_data="howto")],
     ])
     await safe_edit(query, caption, reply_markup=keyboard, parse_mode="HTML", context=context)
 
 
 async def _add_account_fallback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
-    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("◀️ Back", callback_data="dashboard")]])
+    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Back", callback_data="dashboard")]])
     await safe_edit(
         query,
-        "➕ <b>Add Account</b>\n\n"
-        "Set <code>WEB_APP_URL</code> in your environment to enable the web panel for adding accounts via phone + OTP.",
+        "<b>Add Account</b>\n\n"
+        "Set <code>WEB_APP_URL</code> in your environment to enable the web panel for adding accounts.",
         reply_markup=keyboard,
         parse_mode="HTML",
         context=context,
