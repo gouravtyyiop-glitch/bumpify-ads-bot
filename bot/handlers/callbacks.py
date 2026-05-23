@@ -2,7 +2,7 @@ import logging
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 from telegram.ext import ContextTypes
 from bot.utils.helpers import safe_edit
-from bot.config import START_CAPTION, TRACKING_BOT_USERNAME, WEB_APP_URL
+from bot.config import START_CAPTION, LOGGER_BOT_USERNAME, WEB_APP_URL
 
 logger = logging.getLogger(__name__)
 
@@ -113,10 +113,10 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def _home_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     caption = START_CAPTION
-    if TRACKING_BOT_USERNAME:
+    if LOGGER_BOT_USERNAME:
         caption += (
-            f"\n\n<blockquote><b>Important:</b> Start @{TRACKING_BOT_USERNAME} first "
-            "to receive real-time broadcast analytics.</blockquote>"
+            f"\n\n<blockquote><b>Important:</b> Start @{LOGGER_BOT_USERNAME} first "
+            "to receive real-time broadcast logs.</blockquote>"
         )
     second_row = [InlineKeyboardButton("FAQ", callback_data="faq", api_kwargs={"style": "danger"})]
     if WEB_APP_URL:

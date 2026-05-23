@@ -91,6 +91,6 @@ async def analytics_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"Failed: <b>{stats['failed']}</b>\n"
         f"Active Accounts: <b>{len(accounts)}</b>"
         "</blockquote>\n\n"
-        "<i>Detailed per-group reports are sent to your tracking bot after each cycle.</i>",
+        "<i>Detailed per-group logs are sent to your logger bot after each cycle.</i>",
         reply_markup=keyboard, parse_mode="HTML", context=context,
     )

@@ -23,7 +23,7 @@ HOWTO_TEXT = (
     "3. Choose Direct or Forward mode\n"
     "4. Set an interval (how often to re-broadcast)\n"
     "5. Press Start Ads</blockquote>\n\n"
-    "<blockquote>Your tracking bot will receive a detailed report after each cycle showing:\n"
+    "<blockquote>Your logger bot will receive detailed logs after each cycle showing:\n"
     "- Every group name, username, link and ID\n"
     "- Success / failed counts per account\n"
     "- Next cycle countdown</blockquote>"

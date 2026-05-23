@@ -17,15 +17,15 @@ _dl_semaphore = asyncio.Semaphore(8)
 _acc_semaphore = asyncio.Semaphore(10)
 
 
-async def send_tracking(owner_id: int, text: str):
-    from bot.config import TRACKING_BOT_TOKEN
-    if not TRACKING_BOT_TOKEN:
+async def send_logs(owner_id: int, text: str):
+    from bot.config import LOGGER_BOT_TOKEN
+    if not LOGGER_BOT_TOKEN:
         return
     try:
-        bot = telegram.Bot(token=TRACKING_BOT_TOKEN)
+        bot = telegram.Bot(token=LOGGER_BOT_TOKEN)
         await bot.send_message(chat_id=owner_id, text=text, parse_mode="HTML")
     except Exception as e:
-        logger.warning("send_tracking failed: %s", e)
+        logger.warning("send_logs failed: %s", e)
 
 
 async def _download_file(file_id: str) -> bytes | None:
@@ -228,7 +228,7 @@ async def _process_account(owner_id: int, acc_num: int, acc: dict, effective_ad:
         except (SessionRevoked, AuthKeyUnregistered) as e:
             report["error"] = "Session expired — account removed"
             await db.remove_account(owner_id, acc["phone"])
-            await send_tracking(
+            await send_logs(
                 owner_id,
                 f"<b>Account #{acc_num} Session Expired</b>\n"
                 f"Phone: <code>{acc['phone']}</code>\n"
@@ -236,7 +236,7 @@ async def _process_account(owner_id: int, acc_num: int, acc: dict, effective_ad:
             )
         except Exception as e:
             report["error"] = str(e)[:200]
-            await send_tracking(
+            await send_logs(
                 owner_id,
                 f"<b>Account #{acc_num} Error</b>\n"
                 f"Phone: <code>{acc['phone']}</code>\n"
@@ -304,7 +304,7 @@ async def broadcast_for_user(owner_id: int):
         if len(msg) > 4096:
             msg = msg[:4000] + "\n<i>... truncated</i>"
 
-        await send_tracking(owner_id, msg)
+        await send_logs(owner_id, msg)
 
 
 async def start_broadcast(owner_id: int):

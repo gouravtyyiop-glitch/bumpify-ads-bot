@@ -1,6 +1,6 @@
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 from telegram.ext import ContextTypes
-from bot.config import START_IMAGE_URL, START_CAPTION, TRACKING_BOT_USERNAME, WEB_APP_URL
+from bot.config import START_IMAGE_URL, START_CAPTION, LOGGER_BOT_USERNAME, WEB_APP_URL
 from bot.utils import db
 
 
@@ -9,10 +9,10 @@ async def start_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await db.upsert_user(user.id, {"user_id": user.id, "username": user.username or ""})
 
     caption = START_CAPTION
-    if TRACKING_BOT_USERNAME:
+    if LOGGER_BOT_USERNAME:
         caption += (
-            f"\n\n<blockquote><b>Important:</b> Start @{TRACKING_BOT_USERNAME} first "
-            "to receive real-time broadcast analytics.</blockquote>"
+            f"\n\n<blockquote><b>Important:</b> Start @{LOGGER_BOT_USERNAME} first "
+            "to receive real-time broadcast logs.</blockquote>"
         )
 
     second_row = [InlineKeyboardButton("FAQ", callback_data="faq", api_kwargs={"style": "danger"})]
