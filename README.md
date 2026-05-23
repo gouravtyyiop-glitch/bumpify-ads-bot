@@ -50,41 +50,6 @@
 
 ---
 
-## 📁 Project Structure
-
-```
-bumpify-bot/
-├── 📄 main.py                     — Entry point, starts all three services
-├── 🤖 bot/
-│   ├── config.py                  — Environment variable loading
-│   ├── handlers/
-│   │   ├── start.py               — /start command handler
-│   │   ├── dashboard.py           — Main control panel
-│   │   ├── ads.py                 — Ad message set / start / stop
-│   │   ├── accounts.py            — Account management
-│   │   ├── auto_reply.py          — Auto-reply toggle and custom text
-│   │   ├── interval.py            — Broadcast interval settings
-│   │   ├── faq.py                 — FAQ and how-to
-│   │   └── callbacks.py           — Inline button router
-│   └── utils/
-│       ├── db.py                  — MongoDB CRUD (motor async)
-│       ├── broadcaster.py         — Concurrent async broadcast engine
-│       ├── session_manager.py     — Pyrogram login / session export
-│       ├── auto_reply_manager.py  — Persistent auto-reply clients
-│       ├── encryption.py          — AES-256 Fernet encrypt/decrypt
-│       └── helpers.py             — safe_edit utility
-├── 📡 tracking_bot/
-│   └── handlers.py                — Analytics tracking bot
-└── 🌐 web/
-    ├── app.py                     — aiohttp server + REST API
-    ├── templates/index.html       — Telegram WebApp UI
-    └── static/
-        ├── style.css              — White/black professional theme
-        └── app.js                 — Frontend logic + 250+ country codes
-```
-
----
-
 ## ⚙️ Environment Variables
 
 | Variable | Required | Default | Description |
