@@ -7,9 +7,6 @@ from bot.utils.broadcaster import start_broadcast, stop_broadcast
 
 logger = logging.getLogger(__name__)
 
-_AD_MSG_TYPES = ("text", "photo", "video", "document", "audio", "animation",
-                 "sticker", "voice", "video_note")
-
 
 async def set_ad_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -20,8 +17,9 @@ async def set_ad_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await safe_edit(
         query,
         "<b>Set Ad Message</b>\n\n"
-        "Forward any message from your Saved Messages, or send any message directly.\n\n"
-        "Supports text, photos, videos, documents, audio, stickers — everything.\n\n"
+        "<blockquote>Forward any message from your Saved Messages, or send any message directly.\n"
+        "Supports text, photos, videos, documents, audio, stickers — everything Telegram supports.\n"
+        "Full formatting is preserved: bold, italic, code, blockquote, strikethrough, underline.</blockquote>\n\n"
         "Your message will be deleted automatically after saving.",
         reply_markup=keyboard,
         parse_mode="HTML",
@@ -39,44 +37,71 @@ async def handle_ad_message(update: Update, context: ContextTypes.DEFAULT_TYPE) 
 
     ad_data = None
     if msg.photo:
-        ad_data = {"type": "photo", "file_id": msg.photo[-1].file_id,
-                   "file_unique_id": msg.photo[-1].file_unique_id,
-                   "caption": msg.caption or ""}
+        ad_data = {
+            "type": "photo",
+            "file_id": msg.photo[-1].file_id,
+            "file_unique_id": msg.photo[-1].file_unique_id,
+            "caption": msg.caption_html or msg.caption or "",
+        }
     elif msg.video:
-        ad_data = {"type": "video", "file_id": msg.video.file_id,
-                   "file_unique_id": msg.video.file_unique_id,
-                   "caption": msg.caption or ""}
+        ad_data = {
+            "type": "video",
+            "file_id": msg.video.file_id,
+            "file_unique_id": msg.video.file_unique_id,
+            "caption": msg.caption_html or msg.caption or "",
+        }
     elif msg.document:
-        ad_data = {"type": "document", "file_id": msg.document.file_id,
-                   "file_unique_id": msg.document.file_unique_id,
-                   "caption": msg.caption or ""}
+        ad_data = {
+            "type": "document",
+            "file_id": msg.document.file_id,
+            "file_unique_id": msg.document.file_unique_id,
+            "caption": msg.caption_html or msg.caption or "",
+        }
     elif msg.audio:
-        ad_data = {"type": "audio", "file_id": msg.audio.file_id,
-                   "file_unique_id": msg.audio.file_unique_id,
-                   "caption": msg.caption or ""}
+        ad_data = {
+            "type": "audio",
+            "file_id": msg.audio.file_id,
+            "file_unique_id": msg.audio.file_unique_id,
+            "caption": msg.caption_html or msg.caption or "",
+        }
     elif msg.animation:
-        ad_data = {"type": "animation", "file_id": msg.animation.file_id,
-                   "file_unique_id": msg.animation.file_unique_id,
-                   "caption": msg.caption or ""}
+        ad_data = {
+            "type": "animation",
+            "file_id": msg.animation.file_id,
+            "file_unique_id": msg.animation.file_unique_id,
+            "caption": msg.caption_html or msg.caption or "",
+        }
     elif msg.sticker:
-        ad_data = {"type": "sticker", "file_id": msg.sticker.file_id,
-                   "file_unique_id": msg.sticker.file_unique_id}
+        ad_data = {
+            "type": "sticker",
+            "file_id": msg.sticker.file_id,
+            "file_unique_id": msg.sticker.file_unique_id,
+        }
     elif msg.voice:
-        ad_data = {"type": "voice", "file_id": msg.voice.file_id,
-                   "file_unique_id": msg.voice.file_unique_id,
-                   "caption": msg.caption or ""}
+        ad_data = {
+            "type": "voice",
+            "file_id": msg.voice.file_id,
+            "file_unique_id": msg.voice.file_unique_id,
+            "caption": msg.caption_html or msg.caption or "",
+        }
     elif msg.video_note:
-        ad_data = {"type": "video_note", "file_id": msg.video_note.file_id,
-                   "file_unique_id": msg.video_note.file_unique_id}
+        ad_data = {
+            "type": "video_note",
+            "file_id": msg.video_note.file_id,
+            "file_unique_id": msg.video_note.file_unique_id,
+        }
     elif msg.text:
-        ad_data = {"type": "text", "text": msg.text}
+        ad_data = {
+            "type": "text",
+            "text": msg.text_html if msg.text_html else msg.text,
+        }
     else:
-        await msg.reply_text("Unsupported message type. Please try again.")
         await db.set_waiting_for_ad(user_id, True)
+        await update.message.reply_text("Unsupported message type. Please try again.")
         return True
 
-    if msg.forward_date and msg.forward_from and msg.forward_from.id == user_id:
-        ad_data["from_saved"] = True
+    if msg.forward_date:
+        ad_data["forwarded"] = True
 
     await db.set_ad_message_data(user_id, ad_data)
 
@@ -88,23 +113,20 @@ async def handle_ad_message(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     prompt = await db.get_prompt_message(user_id)
     if prompt:
         chat_id, msg_id = prompt
-        text, keyboard = await _build_dashboard_text_and_keyboard(user_id)
-        try:
-            await context.bot.edit_message_caption(
-                chat_id=chat_id, message_id=msg_id,
-                caption=text, reply_markup=keyboard, parse_mode="HTML",
-            )
-            return True
-        except Exception:
-            pass
-        try:
-            await context.bot.edit_message_text(
-                chat_id=chat_id, message_id=msg_id,
-                text=text, reply_markup=keyboard, parse_mode="HTML",
-            )
-            return True
-        except Exception:
-            pass
+        text, keyboard = await _build_dashboard_content_local(user_id)
+        for method in ("edit_message_caption", "edit_message_text"):
+            try:
+                fn = getattr(context.bot, method)
+                kwargs = {"chat_id": chat_id, "message_id": msg_id,
+                          "reply_markup": keyboard, "parse_mode": "HTML"}
+                if method == "edit_message_caption":
+                    kwargs["caption"] = text
+                else:
+                    kwargs["text"] = text
+                await fn(**kwargs)
+                return True
+            except Exception:
+                continue
 
     keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Dashboard", callback_data="dashboard")]])
     await context.bot.send_message(
@@ -116,7 +138,7 @@ async def handle_ad_message(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     return True
 
 
-async def _build_dashboard_text_and_keyboard(user_id: int):
+async def _build_dashboard_content_local(user_id: int):
     from bot.handlers.dashboard import _build_dashboard_content
     return await _build_dashboard_content(user_id)
 
@@ -127,16 +149,33 @@ async def start_ads_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     ad_data = await db.get_ad_message_data(user_id)
     if not ad_data:
-        await query.answer("Ad message not set. Go to Set Ad Message first.", show_alert=True)
+        keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Set Ad Message", callback_data="set_ad")]])
+        await safe_edit(
+            query,
+            "<b>No ad message set.</b>\n\n"
+            "<blockquote>Go to Set Ad Message first and send the message you want to broadcast.</blockquote>",
+            reply_markup=keyboard, parse_mode="HTML", context=context,
+        )
         return
 
     accounts = await db.get_accounts(user_id)
     if not accounts:
-        await query.answer("No accounts added. Add at least one account first.", show_alert=True)
+        keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Add Account", callback_data="add_account")]])
+        await safe_edit(
+            query,
+            "<b>No accounts connected.</b>\n\n"
+            "<blockquote>Add at least one Telegram account before starting ads.</blockquote>",
+            reply_markup=keyboard, parse_mode="HTML", context=context,
+        )
         return
 
     if await db.is_ads_running(user_id):
-        await query.answer("Ads are already running!", show_alert=True)
+        keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Dashboard", callback_data="dashboard")]])
+        await safe_edit(
+            query,
+            "<b>Ads are already running.</b>\n\nUse Stop Ads to stop the current broadcast.",
+            reply_markup=keyboard, parse_mode="HTML", context=context,
+        )
         return
 
     await start_broadcast(user_id)
@@ -148,11 +187,9 @@ async def start_ads_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await safe_edit(
         query,
         f"<b>Ads Started</b>\n\n"
-        f"Broadcasting to all groups via <code>{len(accounts)}</code> account(s).\n"
-        f"Interval: <code>{interval_label}</code>",
-        reply_markup=keyboard,
-        parse_mode="HTML",
-        context=context,
+        f"<blockquote>Broadcasting to all groups via <b>{len(accounts)}</b> active account(s).\n"
+        f"Interval: <b>{interval_label}</b></blockquote>",
+        reply_markup=keyboard, parse_mode="HTML", context=context,
     )
 
 
@@ -163,10 +200,8 @@ async def stop_ads_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Dashboard", callback_data="dashboard")]])
     await safe_edit(
         query,
-        "<b>Ads Stopped.</b>\n\nBroadcasting has been paused.",
-        reply_markup=keyboard,
-        parse_mode="HTML",
-        context=context,
+        "<b>Ads Stopped.</b>\n\n<blockquote>Broadcasting has been paused. Start again from the dashboard.</blockquote>",
+        reply_markup=keyboard, parse_mode="HTML", context=context,
     )
 
 
@@ -176,7 +211,7 @@ async def toggle_mode_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
     current = await db.get_broadcast_mode(user_id)
     new_mode = "forward" if current == "direct" else "direct"
     await db.set_broadcast_mode(user_id, new_mode)
-    mode_label = "Forward (from Saved Messages)" if new_mode == "forward" else "Direct (send content directly)"
+    mode_label = "Forward (from Saved Messages)" if new_mode == "forward" else "Direct (send stored content)"
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton("Switch Again", callback_data="toggle_mode")],
         [InlineKeyboardButton("Dashboard", callback_data="dashboard")],
@@ -184,9 +219,7 @@ async def toggle_mode_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
     await safe_edit(
         query,
         f"<b>Mode: {mode_label}</b>\n\n"
-        "<b>Direct</b> — sends the stored message directly each time.\n"
-        "<b>Forward</b> — forwards the latest message from each account's Saved Messages.",
-        reply_markup=keyboard,
-        parse_mode="HTML",
-        context=context,
+        "<blockquote><b>Direct</b> — sends the stored message content directly each time.\n"
+        "<b>Forward</b> — forwards the latest message from each account's Saved Messages.</blockquote>",
+        reply_markup=keyboard, parse_mode="HTML", context=context,
     )

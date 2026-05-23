@@ -1,50 +1,69 @@
-## Bumpify Ads Bot — Setup Guide
+# Bumpify — Setup Guide
 
-### Step 1: Get Telegram API credentials
-- Go to https://my.telegram.org/apps
-- Create an app and note your `API_ID` and `API_HASH`
+## Step 1: Get Telegram Bot Tokens
 
-### Step 2: Create two bots on @BotFather
-1. Main bot → copy token to `BOT_TOKEN`
-2. Tracking bot → copy token to `TRACKING_BOT_TOKEN`, username to `TRACKING_BOT_USERNAME`
+1. Open [@BotFather](https://t.me/botfather) on Telegram
+2. Send `/newbot` — create your **main bot**. Copy the token.
+3. Send `/newbot` again — create your **tracking bot**. Copy the token.
 
-### Step 3: Edit .env
-Copy `.env.example` to `.env` and fill in all values.
-MongoDB URL is already set. Just update the bot tokens and API credentials.
+## Step 2: Get API Credentials
 
-### Step 4: Run locally
+1. Go to [my.telegram.org](https://my.telegram.org)
+2. Log in with your phone
+3. Click "API development tools"
+4. Create a new app — copy **API ID** and **API Hash**
+
+## Step 3: MongoDB
+
+1. Go to [cloud.mongodb.com](https://cloud.mongodb.com)
+2. Create a free cluster
+3. Create a database user (username + password)
+4. Get the connection string: `mongodb+srv://USER:PASS@cluster.xxx.mongodb.net/`
+
+## Step 4: Fill .env
+
 ```
-pip install -r requirements.txt
+BOT_TOKEN=          <- main bot token from BotFather
+TRACKING_BOT_TOKEN= <- tracking bot token from BotFather
+TRACKING_BOT_USERNAME= <- tracking bot @username (without @)
+API_ID=             <- from my.telegram.org
+API_HASH=           <- from my.telegram.org
+MONGODB_URL=        <- your MongoDB connection string
+ENCRYPTION_KEY=     <- any random string, min 32 characters
+WEB_APP_URL=        <- public HTTPS URL to /panel (optional)
+```
+
+## Step 5: Run
+
+```bash
+cd bumpify-bot
 python main.py
 ```
 
-### Step 5: Deploy to Railway (one click)
-- Push this folder to GitHub
-- Go to railway.app → New Project → Deploy from GitHub
-- Set all env vars from your .env file
+All three services start together:
+- Main bot
+- Tracking bot
+- Web panel on port 3000
 
-### Step 6: Deploy to Render
-- Push to GitHub
-- Go to render.com → New Web Service → connect repo
-- Set env vars
+## Step 6: Use the Bot
 
-### Step 7: Deploy to VPS
-```
-docker-compose up -d
-```
+1. Open your main bot — send `/start`
+2. Open your tracking bot — send `/start` (required for analytics)
+3. Dashboard → Add Account → enter phone + OTP via web panel
+4. Set Ad Message (send any Telegram message — all media types supported)
+5. Set Interval
+6. Press Start Ads
 
-### Web Panel URL
-After deploying, your WEB_APP_URL will be:
-`https://your-domain.com/panel`
-Set this in your .env so the Add Account button works as a Telegram Web App.
+## Web Panel
 
-### Bot Features
-- /start — welcome screen with image
-- Dashboard — all controls
-- Add Account (web panel) — login via phone + OTP
-- Set Ad Message — send any text/formatted message
-- Start Ads — broadcasts to all groups (not channels)
-- Stop Ads — stop immediately
-- Toggle Mode — Direct or Forward
-- Analytics — success/fail stats
-- FAQ — usage guide
+Runs on port 3000. For the Telegram WebApp button:
+- Deploy to a server with a public HTTPS domain
+- Set `WEB_APP_URL=https://your-domain.com/panel` in `.env`
+- Without it, use the fallback Add Account flow
+
+## Deployment (Railway/Render)
+
+1. Push code to GitHub
+2. Connect repo to Railway or Render
+3. Set all env vars in the platform dashboard
+4. Start command: `cd bumpify-bot && python main.py`

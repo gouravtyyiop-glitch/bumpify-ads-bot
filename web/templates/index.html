@@ -23,7 +23,7 @@
   </header>
 
   <div id="main-screen" class="screen active">
-    <div class="section-label">Connected Accounts</div>
+    <div class="section-label">Accounts</div>
     <div id="accounts-list" class="accounts-list">
       <div class="skeleton-card"></div>
       <div class="skeleton-card"></div>
@@ -39,25 +39,24 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
       Back
     </div>
-
     <div class="form-card">
       <div class="form-title">Add Telegram Account</div>
 
       <div id="step-phone" class="step active">
         <div class="field-group">
-          <label class="field-label">Country Code</label>
-          <select id="country-select" class="input-field" onchange="updatePrefix()">
-          </select>
+          <label class="field-label">Country</label>
+          <select id="country-select" class="input-field" onchange="updatePrefix()"></select>
         </div>
         <div class="field-group">
           <label class="field-label">Phone Number</label>
           <div class="phone-row">
-            <div class="prefix-box" id="prefix-display">+1</div>
-            <input type="tel" id="phone-input" class="input-field phone-field" placeholder="9876543210" inputmode="tel" autocomplete="tel">
+            <div class="prefix-box" id="prefix-display">+91</div>
+            <input type="tel" id="phone-input" class="input-field phone-field" placeholder="9876543210" inputmode="tel">
           </div>
           <div class="field-hint">Enter number without country code</div>
         </div>
         <button class="btn btn-primary full-width" onclick="sendOtp()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.41 2 2 0 0 1 3.6 1.23h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.37a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.73 16z"/></svg>
           Send OTP
         </button>
       </div>
@@ -65,14 +64,18 @@
       <div id="step-otp" class="step">
         <div class="field-group">
           <label class="field-label">Verification Code</label>
-          <input type="text" id="otp-input" class="input-field otp-field" placeholder="12345" maxlength="6" inputmode="numeric">
+          <input type="text" id="otp-input" class="input-field otp-field" placeholder="· · · · ·" maxlength="6" inputmode="numeric" autocomplete="one-time-code">
           <div class="field-hint">Code sent to your phone via Telegram</div>
         </div>
-        <div id="step-2fa" style="display:none;" class="field-group">
+        <div id="step-2fa" class="field-group" style="display:none;">
           <label class="field-label">2-Step Verification Password</label>
-          <input type="password" id="password-input" class="input-field" placeholder="Your 2FA password" autocomplete="current-password">
+          <input type="password" id="password-input" class="input-field" placeholder="Your 2FA password">
+          <div class="field-hint">Your Telegram 2-step verification password</div>
         </div>
-        <button class="btn btn-primary full-width" onclick="verifyOtp()">Verify & Connect</button>
+        <button class="btn btn-primary full-width" onclick="verifyOtp()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Verify & Connect
+        </button>
         <button class="btn btn-ghost full-width" onclick="goBackToPhone()">Change Number</button>
       </div>
     </div>
@@ -86,7 +89,7 @@
         </svg>
       </div>
       <div class="success-check">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
       </div>
       <div class="success-name" id="success-name"></div>
       <div class="success-meta" id="success-meta"></div>
@@ -95,8 +98,8 @@
     </div>
   </div>
 
-  <div id="toast" class="toast"></div>
-  <div id="loader" class="loader-overlay" style="display:none;">
+  <div id="toast" class="toast" role="alert" aria-live="polite"></div>
+  <div id="loader" class="loader-overlay" style="display:none;" aria-hidden="true">
     <div class="spinner"></div>
   </div>
 </div>

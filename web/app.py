@@ -28,12 +28,9 @@ async def static_files(request: web.Request):
         raise web.HTTPNotFound()
     with open(filepath, "rb") as f:
         content = f.read()
-    if filename.endswith(".css"):
-        ct = "text/css"
-    elif filename.endswith(".js"):
-        ct = "application/javascript"
-    else:
-        ct = "application/octet-stream"
+    ct = {"css": "text/css", "js": "application/javascript"}.get(
+        filename.rsplit(".", 1)[-1], "application/octet-stream"
+    )
     return web.Response(body=content, content_type=ct)
 
 
@@ -60,7 +57,7 @@ async def verify_otp(request: web.Request):
         code = body.get("code", "").strip()
         password = body.get("password", "").strip() or None
         if not phone or not user_id or not code:
-            return web.json_response({"ok": False, "error": "Missing fields"})
+            return web.json_response({"ok": False, "error": "Missing required fields"})
         result = await complete_login(phone, user_id, code, password)
         await db.add_account(
             user_id,
@@ -93,18 +90,33 @@ async def get_accounts(request: web.Request):
         user_id = int(request.query.get("user_id", 0))
         if not user_id:
             return web.json_response({"ok": False, "error": "Missing user_id"})
-        accounts = await db.get_accounts(user_id)
+        accounts = await db.get_all_accounts(user_id)
         result = [
             {
-                "name": a["name"],
+                "name": a.get("name", ""),
                 "phone": a["phone"],
                 "username": a.get("username", ""),
                 "tg_user_id": a.get("tg_user_id", 0),
                 "photo_id": a.get("photo_id", ""),
+                "active": a.get("active", True),
             }
             for a in accounts
         ]
         return web.json_response({"ok": True, "accounts": result})
+    except Exception as e:
+        return web.json_response({"ok": False, "error": str(e)})
+
+
+@routes.post("/api/toggle-account")
+async def toggle_account(request: web.Request):
+    try:
+        body = await request.json()
+        user_id = int(body.get("user_id", 0))
+        phone = body.get("phone", "").strip()
+        if not user_id or not phone:
+            return web.json_response({"ok": False, "error": "Missing fields"})
+        new_state = await db.toggle_account_active(user_id, phone)
+        return web.json_response({"ok": True, "active": new_state})
     except Exception as e:
         return web.json_response({"ok": False, "error": str(e)})
 

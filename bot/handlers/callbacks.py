@@ -9,13 +9,13 @@ logger = logging.getLogger(__name__)
 
 async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
+    data = query.data
+    logger.info("CALLBACK: %s from %s", data, update.effective_user.id)
+
     try:
         await query.answer()
     except Exception as e:
-        logger.warning("query.answer failed: %s", e)
-
-    data = query.data
-    logger.info("CALLBACK: %s from %s", data, update.effective_user.id)
+        logger.debug("query.answer: %s", e)
 
     try:
         if data == "dashboard":
@@ -93,6 +93,9 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             from bot.handlers.auto_reply import set_auto_reply_text_handler
             await set_auto_reply_text_handler(update, context)
 
+        else:
+            logger.warning("Unhandled callback: %s", data)
+
     except Exception as e:
         logger.error("callback_handler error [%s]: %s", data, e, exc_info=True)
         try:
@@ -112,8 +115,8 @@ async def _home_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     caption = START_CAPTION
     if TRACKING_BOT_USERNAME:
         caption += (
-            f"\n\n<b>Important:</b> Start @{TRACKING_BOT_USERNAME} first before running ads "
-            "so it can send you broadcast analytics."
+            f"\n\n<blockquote><b>Important:</b> Start @{TRACKING_BOT_USERNAME} first "
+            "to receive real-time broadcast analytics.</blockquote>"
         )
     second_row = [InlineKeyboardButton("FAQ", callback_data="faq")]
     if WEB_APP_URL:
@@ -132,8 +135,6 @@ async def _add_account_fallback(update: Update, context: ContextTypes.DEFAULT_TY
     await safe_edit(
         query,
         "<b>Add Account</b>\n\n"
-        "Set <code>WEB_APP_URL</code> in your environment to enable the web panel for adding accounts.",
-        reply_markup=keyboard,
-        parse_mode="HTML",
-        context=context,
+        "<blockquote>Set <code>WEB_APP_URL</code> in your environment to enable the web panel.</blockquote>",
+        reply_markup=keyboard, parse_mode="HTML", context=context,
     )

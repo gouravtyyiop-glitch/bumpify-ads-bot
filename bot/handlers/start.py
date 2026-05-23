@@ -4,37 +4,26 @@ from bot.config import START_IMAGE_URL, START_CAPTION, TRACKING_BOT_USERNAME, WE
 from bot.utils import db
 
 
-def _build_start_keyboard():
-    second_row = [InlineKeyboardButton("📖 FAQ", callback_data="faq")]
-    if WEB_APP_URL:
-        second_row.append(InlineKeyboardButton("🌐 Web Panel", web_app=WebAppInfo(url=WEB_APP_URL)))
-    return InlineKeyboardMarkup([
-        [InlineKeyboardButton("🚀 Open Dashboard", callback_data="dashboard")],
-        second_row,
-        [InlineKeyboardButton("❓ How To Use", callback_data="howto")],
-    ])
+async def start_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    await db.upsert_user(user.id, {"user_id": user.id, "username": user.username or ""})
 
-
-def _build_caption():
     caption = START_CAPTION
     if TRACKING_BOT_USERNAME:
         caption += (
-            f"\n\n⚠️ <b>Important:</b> Start @{TRACKING_BOT_USERNAME} first before running ads "
-            "so it can send you broadcast analytics."
+            f"\n\n<blockquote><b>Important:</b> Start @{TRACKING_BOT_USERNAME} first "
+            "to receive real-time broadcast analytics.</blockquote>"
         )
-    return caption
 
+    second_row = [InlineKeyboardButton("FAQ", callback_data="faq")]
+    if WEB_APP_URL:
+        second_row.append(InlineKeyboardButton("Web Panel", web_app=WebAppInfo(url=WEB_APP_URL)))
 
-async def start_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user = update.effective_user
-    await db.upsert_user(user.id, {
-        "user_id": user.id,
-        "username": user.username,
-        "name": user.full_name,
-    })
-
-    caption = _build_caption()
-    keyboard = _build_start_keyboard()
+    keyboard = InlineKeyboardMarkup([
+        [InlineKeyboardButton("Open Dashboard", callback_data="dashboard")],
+        second_row,
+        [InlineKeyboardButton("How To Use", callback_data="howto")],
+    ])
 
     if START_IMAGE_URL:
         try:
@@ -48,8 +37,4 @@ async def start_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         except Exception:
             pass
 
-    await update.message.reply_text(
-        caption,
-        parse_mode="HTML",
-        reply_markup=keyboard,
-    )
+    await update.message.reply_text(caption, parse_mode="HTML", reply_markup=keyboard)

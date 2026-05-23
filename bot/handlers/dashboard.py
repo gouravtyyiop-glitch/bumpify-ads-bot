@@ -23,12 +23,14 @@ async def _build_dashboard_content(user_id: int) -> tuple[str, InlineKeyboardMar
 
     text = (
         "<b>Bumpify Dashboard</b>\n\n"
-        f"Accounts: <code>{len(accounts)}</code>\n"
-        f"Ad Message: <code>{ad_status}{ad_type}</code>\n"
-        f"Send Mode: <code>{mode_label}</code>\n"
-        f"Interval: <code>{interval_label}</code>\n"
-        f"Status: <code>{running_status}</code>\n"
-        f"Auto Reply: <code>{ar_label}</code>"
+        "<blockquote>"
+        f"Accounts: <b>{len(accounts)}</b>\n"
+        f"Ad Message: <b>{ad_status}{ad_type}</b>\n"
+        f"Send Mode: <b>{mode_label}</b>\n"
+        f"Interval: <b>{interval_label}</b>\n"
+        f"Status: <b>{running_status}</b>\n"
+        f"Auto Reply: <b>{ar_label}</b>"
+        "</blockquote>"
     )
 
     add_acc_btn = (
@@ -56,7 +58,6 @@ async def dashboard_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     user_id = update.effective_user.id
     text, keyboard = await _build_dashboard_content(user_id)
-
     if query:
         await safe_edit(query, text, reply_markup=keyboard, parse_mode="HTML", context=context)
     else:

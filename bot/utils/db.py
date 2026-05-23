@@ -155,6 +155,23 @@ async def get_accounts(owner_id: int) -> list:
     return await cursor.to_list(length=None)
 
 
+async def get_all_accounts(owner_id: int) -> list:
+    cursor = get_db().accounts.find({"owner_id": owner_id})
+    return await cursor.to_list(length=None)
+
+
+async def toggle_account_active(owner_id: int, phone: str) -> bool:
+    acc = await get_db().accounts.find_one({"owner_id": owner_id, "phone": phone})
+    if not acc:
+        return False
+    new_state = not acc.get("active", True)
+    await get_db().accounts.update_one(
+        {"owner_id": owner_id, "phone": phone},
+        {"$set": {"active": new_state}},
+    )
+    return new_state
+
+
 async def remove_account(owner_id: int, phone: str):
     await get_db().accounts.update_one(
         {"owner_id": owner_id, "phone": phone}, {"$set": {"active": False}}
@@ -181,9 +198,3 @@ async def get_broadcast_stats(owner_id: int) -> dict:
     success = await get_db().broadcast_logs.count_documents({"owner_id": owner_id, "success": True})
     failed = total - success
     return {"total": total, "success": success, "failed": failed}
-
-
-async def upsert_user_check(user_id: int, data: dict):
-    await get_db().users.update_one(
-        {"user_id": user_id}, {"$set": data}, upsert=True
-    )

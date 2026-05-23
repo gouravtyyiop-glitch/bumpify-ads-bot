@@ -8,24 +8,28 @@ async def my_accounts_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
     query = update.callback_query
     user_id = update.effective_user.id
     accounts = await db.get_accounts(user_id)
-    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("◀️ Back", callback_data="dashboard")]])
+    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Back", callback_data="dashboard")]])
 
     if not accounts:
         await safe_edit(
             query,
-            "👥 <b>My Accounts</b>\n\n❌ No accounts added yet.\nUse <b>Add Account</b> to get started.",
+            "<b>My Accounts</b>\n\n"
+            "<blockquote>No accounts connected yet.\nUse Add Account to get started.</blockquote>",
             reply_markup=keyboard, parse_mode="HTML", context=context,
         )
         return
 
-    lines = ["👥 <b>My Accounts</b>\n"]
+    lines = ["<b>My Accounts</b>\n"]
     for i, acc in enumerate(accounts, 1):
-        lines.append(f"<code>{i}.</code> <b>{acc['name']}</b>\n   📱 <code>{acc['phone']}</code>")
-    lines.append(f"\n📊 Total: <b>{len(accounts)} account(s)</b>")
+        uname = f"@{acc['username']}" if acc.get("username") else ""
+        uid = f" · ID: <code>{acc['tg_user_id']}</code>" if acc.get("tg_user_id") else ""
+        lines.append(f"<code>{i}.</code> <b>{acc['name']}</b> {uname}{uid}")
+        lines.append(f"   <code>{acc['phone']}</code>")
+    lines.append(f"\n<blockquote>Total active: <b>{len(accounts)}</b> account(s)</blockquote>")
 
     keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("🗑 Remove Account", callback_data="delete_account")],
-        [InlineKeyboardButton("◀️ Back", callback_data="dashboard")],
+        [InlineKeyboardButton("Remove Account", callback_data="delete_account")],
+        [InlineKeyboardButton("Back", callback_data="dashboard")],
     ])
     await safe_edit(query, "\n".join(lines), reply_markup=keyboard, parse_mode="HTML", context=context)
 
@@ -37,20 +41,26 @@ async def delete_account_handler(update: Update, context: ContextTypes.DEFAULT_T
 
     if not accounts:
         await safe_edit(
-            query, "❌ No accounts to remove.",
-            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("◀️ Back", callback_data="dashboard")]]),
+            query,
+            "<b>No accounts to remove.</b>",
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Back", callback_data="dashboard")]]),
             parse_mode="HTML", context=context,
         )
         return
 
     buttons = [
-        [InlineKeyboardButton(f"🗑 {acc['name']} ({acc['phone']})", callback_data=f"del_acc_{acc['phone']}")]
+        [InlineKeyboardButton(
+            f"{acc['name']} ({acc['phone']})",
+            callback_data=f"del_acc_{acc['phone']}"
+        )]
         for acc in accounts
     ]
-    buttons.append([InlineKeyboardButton("◀️ Back", callback_data="my_accounts")])
+    buttons.append([InlineKeyboardButton("Cancel", callback_data="dashboard")])
     await safe_edit(
-        query, "🗑 <b>Remove Account</b>\n\nSelect the account to remove:",
-        reply_markup=InlineKeyboardMarkup(buttons), parse_mode="HTML", context=context,
+        query,
+        "<b>Remove Account</b>\n\nSelect an account to remove:",
+        reply_markup=InlineKeyboardMarkup(buttons),
+        parse_mode="HTML", context=context,
     )
 
 
@@ -58,9 +68,10 @@ async def confirm_delete_handler(update: Update, context: ContextTypes.DEFAULT_T
     query = update.callback_query
     user_id = update.effective_user.id
     await db.remove_account(user_id, phone)
-    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("◀️ Back to Dashboard", callback_data="dashboard")]])
+    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Back", callback_data="dashboard")]])
     await safe_edit(
-        query, f"✅ Account <code>{phone}</code> removed successfully.",
+        query,
+        f"<b>Account removed.</b>\n\n<blockquote><code>{phone}</code> has been disconnected.</blockquote>",
         reply_markup=keyboard, parse_mode="HTML", context=context,
     )
 
@@ -70,21 +81,16 @@ async def analytics_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     stats = await db.get_broadcast_stats(user_id)
     accounts = await db.get_accounts(user_id)
-    running = await db.is_ads_running(user_id)
-    interval = await db.get_interval(user_id)
-    mins, secs = divmod(interval, 60)
-    interval_label = f"{mins}m {secs}s" if mins else f"{secs}s"
-
-    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("◀️ Back", callback_data="dashboard")]])
+    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Back", callback_data="dashboard")]])
     await safe_edit(
         query,
-        "📈 <b>Analytics</b>\n\n"
-        f"• <b>Total Broadcasts:</b> <code>{stats['total']}</code>\n"
-        f"• <b>Successful:</b> <code>{stats['success']}</code>\n"
-        f"• <b>Failed:</b> <code>{stats['failed']}</code>\n"
-        f"• <b>Active Accounts:</b> <code>{len(accounts)}</code>\n"
-        f"• <b>Interval:</b> <code>{interval_label}</code>\n"
-        f"• <b>Status:</b> {'▶️ Running' if running else '⏸ Paused'}\n\n"
-        "<i>Real-time analytics are sent to your tracking bot after each cycle.</i>",
+        "<b>Analytics</b>\n\n"
+        "<blockquote>"
+        f"Total Sent: <b>{stats['total']}</b>\n"
+        f"Successful: <b>{stats['success']}</b>\n"
+        f"Failed: <b>{stats['failed']}</b>\n"
+        f"Active Accounts: <b>{len(accounts)}</b>"
+        "</blockquote>\n\n"
+        "<i>Detailed per-group reports are sent to your tracking bot after each cycle.</i>",
         reply_markup=keyboard, parse_mode="HTML", context=context,
     )

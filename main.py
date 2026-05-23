@@ -21,29 +21,38 @@ logging.getLogger("httpcore").setLevel(logging.WARNING)
 async def message_handler(update, context):
     if not update.message:
         return
-
     from bot.handlers.interval import handle_interval_text
     if await handle_interval_text(update, context):
         return
-
     from bot.handlers.auto_reply import handle_auto_reply_text
     if await handle_auto_reply_text(update, context):
         return
-
     from bot.handlers.ads import handle_ad_message
-    if await handle_ad_message(update, context):
-        return
+    await handle_ad_message(update, context)
 
 
 def build_main_app() -> Application:
-    app = Application.builder().token(BOT_TOKEN).build()
+    app = (
+        Application.builder()
+        .token(BOT_TOKEN)
+        .concurrent_updates(True)
+        .build()
+    )
     app.add_handler(CommandHandler("start", start_handler))
     app.add_handler(CommandHandler("dashboard", dashboard_handler))
     app.add_handler(CallbackQueryHandler(callback_handler))
     app.add_handler(MessageHandler(
-        (filters.TEXT | filters.PHOTO | filters.VIDEO | filters.Document.ALL |
-         filters.AUDIO | filters.ANIMATION | filters.Sticker.ALL |
-         filters.VOICE | filters.VIDEO_NOTE) & ~filters.COMMAND,
+        (
+            filters.TEXT
+            | filters.PHOTO
+            | filters.VIDEO
+            | filters.Document.ALL
+            | filters.AUDIO
+            | filters.ANIMATION
+            | filters.Sticker.ALL
+            | filters.VOICE
+            | filters.VIDEO_NOTE
+        ) & ~filters.COMMAND,
         message_handler,
     ))
     return app
