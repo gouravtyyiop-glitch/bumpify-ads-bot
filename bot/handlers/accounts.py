@@ -8,7 +8,7 @@ async def my_accounts_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
     query = update.callback_query
     user_id = update.effective_user.id
     accounts = await db.get_accounts(user_id)
-    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Back", callback_data="dashboard")]])
+    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Back", callback_data="dashboard", api_kwargs={"style": "danger"})]])
 
     if not accounts:
         await safe_edit(
@@ -29,7 +29,7 @@ async def my_accounts_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton("Remove Account", callback_data="delete_account")],
-        [InlineKeyboardButton("Back", callback_data="dashboard")],
+        [InlineKeyboardButton("Back", callback_data="dashboard", api_kwargs={"style": "danger"})],
     ])
     await safe_edit(query, "\n".join(lines), reply_markup=keyboard, parse_mode="HTML", context=context)
 
@@ -43,7 +43,7 @@ async def delete_account_handler(update: Update, context: ContextTypes.DEFAULT_T
         await safe_edit(
             query,
             "<b>No accounts to remove.</b>",
-            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Back", callback_data="dashboard")]]),
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Back", callback_data="dashboard", api_kwargs={"style": "danger"})]]),
             parse_mode="HTML", context=context,
         )
         return
@@ -55,7 +55,7 @@ async def delete_account_handler(update: Update, context: ContextTypes.DEFAULT_T
         )]
         for acc in accounts
     ]
-    buttons.append([InlineKeyboardButton("Cancel", callback_data="dashboard")])
+    buttons.append([InlineKeyboardButton("Cancel", callback_data="dashboard", api_kwargs={"style": "danger"})])
     await safe_edit(
         query,
         "<b>Remove Account</b>\n\nSelect an account to remove:",
@@ -68,7 +68,7 @@ async def confirm_delete_handler(update: Update, context: ContextTypes.DEFAULT_T
     query = update.callback_query
     user_id = update.effective_user.id
     await db.remove_account(user_id, phone)
-    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Back", callback_data="dashboard")]])
+    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Back", callback_data="dashboard", api_kwargs={"style": "danger"})]])
     await safe_edit(
         query,
         f"<b>Account removed.</b>\n\n<blockquote><code>{phone}</code> has been disconnected.</blockquote>",
@@ -81,7 +81,7 @@ async def analytics_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     stats = await db.get_broadcast_stats(user_id)
     accounts = await db.get_accounts(user_id)
-    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Back", callback_data="dashboard")]])
+    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Back", callback_data="dashboard", api_kwargs={"style": "danger"})]])
     await safe_edit(
         query,
         "<b>Analytics</b>\n\n"

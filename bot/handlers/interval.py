@@ -17,7 +17,7 @@ async def set_interval_handler(update: Update, context: ContextTypes.DEFAULT_TYP
          InlineKeyboardButton("1 hour", callback_data="interval_3600"),
          InlineKeyboardButton("2 hours", callback_data="interval_7200")],
         [InlineKeyboardButton("Custom", callback_data="interval_custom")],
-        [InlineKeyboardButton("Back", callback_data="dashboard")],
+        [InlineKeyboardButton("Back", callback_data="dashboard", api_kwargs={"style": "danger"})],
     ])
     await safe_edit(
         query,
@@ -34,7 +34,7 @@ async def interval_preset_handler(update: Update, context: ContextTypes.DEFAULT_
     await db.set_interval(user_id, seconds)
     mins, secs = divmod(seconds, 60)
     label = f"{mins}m {secs}s" if mins else f"{secs}s"
-    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Dashboard", callback_data="dashboard")]])
+    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Dashboard", callback_data="dashboard", api_kwargs={"style": "success"})]])
     await safe_edit(
         query,
         f"<b>Interval set to {label}.</b>",
@@ -46,7 +46,7 @@ async def interval_custom_handler(update: Update, context: ContextTypes.DEFAULT_
     query = update.callback_query
     user_id = update.effective_user.id
     await db.set_waiting_for_interval(user_id, True)
-    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Cancel", callback_data="dashboard")]])
+    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Cancel", callback_data="dashboard", api_kwargs={"style": "danger"})]])
     await safe_edit(
         query,
         "<b>Custom Interval</b>\n\n"
@@ -80,7 +80,7 @@ async def handle_interval_text(update: Update, context: ContextTypes.DEFAULT_TYP
 
     mins, secs = divmod(seconds, 60)
     label = f"{mins}m {secs}s" if mins else f"{secs}s"
-    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Dashboard", callback_data="dashboard")]])
+    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Dashboard", callback_data="dashboard", api_kwargs={"style": "success"})]])
     await update.message.reply_text(
         f"<b>Interval set to {label}.</b>",
         parse_mode="HTML", reply_markup=keyboard,

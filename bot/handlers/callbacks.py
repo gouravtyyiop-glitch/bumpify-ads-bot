@@ -131,7 +131,7 @@ async def _home_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def _add_account_fallback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
-    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Back", callback_data="dashboard")]])
+    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Back", callback_data="dashboard", api_kwargs={"style": "danger"})]])
     await safe_edit(
         query,
         "<b>Add Account</b>\n\n"

@@ -27,7 +27,7 @@ async def set_ad_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     await db.set_waiting_for_ad(user_id, True)
     await db.set_prompt_message(user_id, query.message.chat_id, query.message.message_id)
-    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Cancel", callback_data="dashboard")]])
+    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Cancel", callback_data="dashboard", api_kwargs={"style": "danger"})]])
     await safe_edit(
         query,
         "<b>Set Ad Message</b>\n\n"
@@ -143,7 +143,7 @@ async def handle_ad_message(update: Update, context: ContextTypes.DEFAULT_TYPE) 
             except Exception:
                 continue
 
-    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Dashboard", callback_data="dashboard")]])
+    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Dashboard", callback_data="dashboard", api_kwargs={"style": "success"})]])
     await context.bot.send_message(
         chat_id=msg.chat_id,
         text="<b>Ad message saved.</b>",
@@ -164,7 +164,7 @@ async def start_ads_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     ad_data = await db.get_ad_message_data(user_id)
     if not ad_data:
-        keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Set Ad Message", callback_data="set_ad")]])
+        keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Set Ad Message", callback_data="set_ad", api_kwargs={"style": "primary"})]])
         await safe_edit(
             query,
             "<b>No ad message set.</b>\n\n"
@@ -175,7 +175,7 @@ async def start_ads_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     accounts = await db.get_accounts(user_id)
     if not accounts:
-        keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Add Account", callback_data="add_account")]])
+        keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Add Account", callback_data="add_account", api_kwargs={"style": "primary"})]])
         await safe_edit(
             query,
             "<b>No accounts connected.</b>\n\n"
@@ -185,7 +185,7 @@ async def start_ads_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     if await db.is_ads_running(user_id):
-        keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Dashboard", callback_data="dashboard")]])
+        keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Dashboard", callback_data="dashboard", api_kwargs={"style": "success"})]])
         await safe_edit(
             query,
             "<b>Ads are already running.</b>\n\nUse Stop Ads to stop the current broadcast.",
@@ -198,7 +198,7 @@ async def start_ads_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     mins, secs = divmod(interval, 60)
     interval_label = f"{mins}m {secs}s" if mins else f"{secs}s"
 
-    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Dashboard", callback_data="dashboard")]])
+    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Dashboard", callback_data="dashboard", api_kwargs={"style": "success"})]])
     await safe_edit(
         query,
         f"<b>Ads Started</b>\n\n"
@@ -212,7 +212,7 @@ async def stop_ads_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     user_id = update.effective_user.id
     await stop_broadcast(user_id)
-    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Dashboard", callback_data="dashboard")]])
+    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Dashboard", callback_data="dashboard", api_kwargs={"style": "success"})]])
     await safe_edit(
         query,
         "<b>Ads Stopped.</b>\n\n<blockquote>Broadcasting has been paused. Start again from the dashboard.</blockquote>",
@@ -229,7 +229,7 @@ async def toggle_mode_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
     mode_label = "Forward (from Saved Messages)" if new_mode == "forward" else "Direct (send stored content)"
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton("Switch Again", callback_data="toggle_mode")],
-        [InlineKeyboardButton("Dashboard", callback_data="dashboard")],
+        [InlineKeyboardButton("Dashboard", callback_data="dashboard", api_kwargs={"style": "success"})],
     ])
     await safe_edit(
         query,

@@ -20,7 +20,7 @@ async def auto_reply_handler(update: Update, context: ContextTypes.DEFAULT_TYPE)
             callback_data="toggle_auto_reply"
         )],
         [InlineKeyboardButton("Set Custom Text", callback_data="set_auto_reply_text")],
-        [InlineKeyboardButton("Back to Dashboard", callback_data="dashboard")],
+        [InlineKeyboardButton("Back to Dashboard", callback_data="dashboard", api_kwargs={"style": "success"})],
     ])
     await safe_edit(
         query,
@@ -48,7 +48,7 @@ async def toggle_auto_reply_handler(update: Update, context: ContextTypes.DEFAUL
 
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton("Auto Reply Settings", callback_data="auto_reply")],
-        [InlineKeyboardButton("Back to Dashboard", callback_data="dashboard")],
+        [InlineKeyboardButton("Back to Dashboard", callback_data="dashboard", api_kwargs={"style": "success"})],
     ])
     await safe_edit(
         query,
@@ -65,7 +65,7 @@ async def set_auto_reply_text_handler(update: Update, context: ContextTypes.DEFA
     query = update.callback_query
     user_id = update.effective_user.id
     await db.set_waiting_for_auto_reply(user_id, True)
-    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Cancel", callback_data="auto_reply")]])
+    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Cancel", callback_data="auto_reply", api_kwargs={"style": "danger"})]])
     await safe_edit(
         query,
         "<b>Set Auto Reply Text</b>\n\n"
@@ -93,7 +93,7 @@ async def handle_auto_reply_text(update: Update, context: ContextTypes.DEFAULT_T
         pass
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton("Auto Reply Settings", callback_data="auto_reply")],
-        [InlineKeyboardButton("Dashboard", callback_data="dashboard")],
+        [InlineKeyboardButton("Dashboard", callback_data="dashboard", api_kwargs={"style": "success"})],
     ])
     await update.message.reply_text(
         "<b>Auto reply text updated.</b>",

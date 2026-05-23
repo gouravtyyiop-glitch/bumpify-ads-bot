@@ -49,7 +49,7 @@ async def _build_dashboard_content(user_id: int) -> tuple[str, InlineKeyboardMar
          InlineKeyboardButton("Analytics", callback_data="analytics")],
         [InlineKeyboardButton("Auto Reply", callback_data="auto_reply"),
          InlineKeyboardButton("Remove Account", callback_data="delete_account")],
-        [InlineKeyboardButton("Home", callback_data="home")],
+        [InlineKeyboardButton("Home", callback_data="home", api_kwargs={"style": "danger"})],
     ])
     return text, keyboard
 
