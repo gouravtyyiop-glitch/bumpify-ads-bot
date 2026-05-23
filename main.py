@@ -124,7 +124,7 @@ async def main():
 
     logger_app = None
     if LOGGER_BOT_TOKEN:
-        from tracking_bot.handlers import build_logger_app
+        from logger_bot.handlers import build_logger_app
         logger_app = build_logger_app()
         await run_logger(logger_app)
 

@@ -69,8 +69,6 @@ Multi-account · All media types · AES-256 encrypted sessions · Real-time logs
 | `PRIVATE_MODE` | ⬜ | Set `true` to restrict bot to owner only |
 | `OWNER_ID` | ⬜ | Your Telegram user ID (required with `PRIVATE_MODE=true`) |
 
-> **Backward compatible:** Old `TRACKING_BOT_TOKEN` / `TRACKING_BOT_USERNAME` env vars still work as fallbacks.
-
 ---
 
 ## 🚀 Quick Start

@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 BOT_TOKEN = os.environ["BOT_TOKEN"]
-LOGGER_BOT_TOKEN = os.getenv("LOGGER_BOT_TOKEN") or os.getenv("TRACKING_BOT_TOKEN", "")
+LOGGER_BOT_TOKEN = os.getenv("LOGGER_BOT_TOKEN", "")
 API_ID = int(os.environ["API_ID"])
 API_HASH = os.environ["API_HASH"]
 MONGODB_URL = os.environ["MONGODB_URL"]
@@ -28,7 +28,7 @@ AUTO_REPLY_TEXT = os.getenv(
     "I'm currently offline. Please drop your message and I'll get back to you soon."
 )
 
-LOGGER_BOT_USERNAME = os.getenv("LOGGER_BOT_USERNAME") or os.getenv("TRACKING_BOT_USERNAME", "")
+LOGGER_BOT_USERNAME = os.getenv("LOGGER_BOT_USERNAME", "")
 WEB_APP_URL = os.getenv("WEB_APP_URL", "")
 WEB_PORT = int(os.getenv("WEB_PORT", os.getenv("PORT", "3000")))
 

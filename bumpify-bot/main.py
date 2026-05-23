@@ -3,7 +3,7 @@ import logging
 import traceback
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters
-from bot.config import BOT_TOKEN, TRACKING_BOT_TOKEN
+from bot.config import BOT_TOKEN, LOGGER_BOT_TOKEN
 from bot.handlers.start import start_handler
 from bot.handlers.dashboard import dashboard_handler
 from bot.handlers.callbacks import callback_handler
@@ -61,32 +61,32 @@ def build_main_app() -> Application:
     return app
 
 
-async def _start_tracking(tracking_app: Application):
+async def _start_logger(logger_app: Application):
     try:
-        await tracking_app.initialize()
-        await tracking_app.bot.delete_webhook(drop_pending_updates=True)
-        await tracking_app.start()
-        await tracking_app.updater.start_polling(
+        await logger_app.initialize()
+        await logger_app.bot.delete_webhook(drop_pending_updates=True)
+        await logger_app.start()
+        await logger_app.updater.start_polling(
             allowed_updates=["message", "callback_query"],
             read_timeout=10,
             write_timeout=10,
             connect_timeout=10,
             pool_timeout=10,
         )
-        logger.info("Tracking bot started")
+        logger.info("Logger bot started")
         return True
     except Exception as e:
-        logger.warning("Tracking bot failed to start (check TRACKING_BOT_TOKEN): %s", e)
+        logger.warning("Logger bot failed to start (check LOGGER_BOT_TOKEN): %s", e)
         return False
 
 
-async def _stop_tracking(tracking_app: Application, started: bool):
+async def _stop_logger(logger_app: Application, started: bool):
     if not started:
         return
     try:
-        await tracking_app.updater.stop()
-        await tracking_app.stop()
-        await tracking_app.shutdown()
+        await logger_app.updater.stop()
+        await logger_app.stop()
+        await logger_app.shutdown()
     except Exception:
         pass
 
@@ -98,11 +98,11 @@ async def main():
     main_app = build_main_app()
     web_runner = await run_web()
 
-    tracking_app = None
-    tracking_started = False
-    if TRACKING_BOT_TOKEN:
-        from tracking_bot.handlers import build_tracking_app
-        tracking_app = build_tracking_app()
+    logger_app = None
+    logger_started = False
+    if LOGGER_BOT_TOKEN:
+        from logger_bot.handlers import build_logger_app
+        logger_app = build_logger_app()
 
     async with main_app:
         await main_app.bot.delete_webhook(drop_pending_updates=True)
@@ -116,8 +116,8 @@ async def main():
         )
         logger.info("Main bot started")
 
-        if tracking_app:
-            tracking_started = await _start_tracking(tracking_app)
+        if logger_app:
+            logger_started = await _start_logger(logger_app)
 
         logger.info("All services running.")
 
@@ -130,8 +130,8 @@ async def main():
             await stop_all_auto_replies()
             await main_app.updater.stop()
             await main_app.stop()
-            if tracking_app:
-                await _stop_tracking(tracking_app, tracking_started)
+            if logger_app:
+                await _stop_logger(logger_app, logger_started)
             await web_runner.cleanup()
             await db.close()
 

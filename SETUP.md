@@ -4,7 +4,7 @@
 
 1. Open [@BotFather](https://t.me/botfather) on Telegram
 2. Send `/newbot` — create your **main bot**. Copy the token.
-3. Send `/newbot` again — create your **tracking bot**. Copy the token.
+3. Send `/newbot` again — create your **logger bot**. Copy the token.
 
 ## Step 2: Get API Credentials
 
@@ -24,8 +24,8 @@
 
 ```
 BOT_TOKEN=          <- main bot token from BotFather
-TRACKING_BOT_TOKEN= <- tracking bot token from BotFather
-TRACKING_BOT_USERNAME= <- tracking bot @username (without @)
+LOGGER_BOT_TOKEN=   <- logger bot token from BotFather
+LOGGER_BOT_USERNAME= <- logger bot @username (without @)
 API_ID=             <- from my.telegram.org
 API_HASH=           <- from my.telegram.org
 MONGODB_URL=        <- your MongoDB connection string
@@ -36,19 +36,18 @@ WEB_APP_URL=        <- public HTTPS URL to /panel (optional)
 ## Step 5: Run
 
 ```bash
-cd bumpify-bot
 python main.py
 ```
 
 All three services start together:
 - Main bot
-- Tracking bot
+- Logger bot
 - Web panel on port 3000
 
 ## Step 6: Use the Bot
 
 1. Open your main bot — send `/start`
-2. Open your tracking bot — send `/start` (required for analytics)
+2. Open your logger bot — send `/start` (required to receive broadcast logs)
 3. Dashboard → Add Account → enter phone + OTP via web panel
 4. Set Ad Message (send any Telegram message — all media types supported)
 5. Set Interval
@@ -66,4 +65,4 @@ Runs on port 3000. For the Telegram WebApp button:
 1. Push code to GitHub
 2. Connect repo to Railway or Render
 3. Set all env vars in the platform dashboard
-4. Start command: `cd bumpify-bot && python main.py`
+4. Start command: `python main.py`
