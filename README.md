@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://i.ibb.co/hFrJywGt/file-3988.jpg" alt="Bumpify Ads Bot" width="120" style="border-radius:16px"/>
+<img src="https://i.ibb.co/B56nZRw3/file-4027.jpg" alt="Bumpify Ads Bot" width="120" style="border-radius:16px"/>
 
 <h1>🚀 Bumpify Ads Bot</h1>
 
