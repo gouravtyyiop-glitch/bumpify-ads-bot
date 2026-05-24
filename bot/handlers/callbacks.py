@@ -54,10 +54,6 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             from bot.handlers.ads import stop_ads_handler
             await stop_ads_handler(update, context)
 
-        elif data == "toggle_mode":
-            from bot.handlers.ads import toggle_mode_handler
-            await toggle_mode_handler(update, context)
-
         elif data == "set_interval":
             from bot.handlers.interval import set_interval_handler
             await set_interval_handler(update, context)

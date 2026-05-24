@@ -9,14 +9,11 @@ async def _build_dashboard_content(user_id: int) -> tuple[str, InlineKeyboardMar
     accounts = await db.get_accounts(user_id)
     ad_data = await db.get_ad_message_data(user_id)
     running = await db.is_ads_running(user_id)
-    mode = await db.get_broadcast_mode(user_id)
     interval = await db.get_interval(user_id)
     auto_reply = await db.is_auto_reply_enabled(user_id)
 
-    ad_status = "Set" if ad_data else "Not Set"
-    ad_type = f" ({ad_data['type']})" if ad_data else ""
-    running_status = "Running" if running else "Paused"
-    mode_label = "Forward" if mode == "forward" else "Direct"
+    ad_status = "Set ✓" if ad_data else "Not Set"
+    running_status = "🟢 Running" if running else "⏸ Paused"
     ar_label = "ON" if auto_reply else "OFF"
     mins, secs = divmod(interval, 60)
     interval_label = f"{mins}m {secs}s" if mins else f"{secs}s"
@@ -25,8 +22,8 @@ async def _build_dashboard_content(user_id: int) -> tuple[str, InlineKeyboardMar
         "<b>Bumpify Dashboard</b>\n\n"
         "<blockquote>"
         f"Accounts: <b>{len(accounts)}</b>\n"
-        f"Ad Message: <b>{ad_status}{ad_type}</b>\n"
-        f"Send Mode: <b>{mode_label}</b>\n"
+        f"Ad Message: <b>{ad_status}</b>\n"
+        f"Broadcast: <b>From Saved Messages</b>\n"
         f"Interval: <b>{interval_label}</b>\n"
         f"Status: <b>{running_status}</b>\n"
         f"Auto Reply: <b>{ar_label}</b>"
@@ -46,13 +43,11 @@ async def _build_dashboard_content(user_id: int) -> tuple[str, InlineKeyboardMar
     keyboard = InlineKeyboardMarkup([
         [add_acc_btn, InlineKeyboardButton("My Accounts", callback_data="my_accounts", api_kwargs={"style": "primary"})],
         ad_row,
-        [InlineKeyboardButton("Send Mode", callback_data="toggle_mode", api_kwargs={"style": "primary"}),
-         InlineKeyboardButton("Set Interval", callback_data="set_interval", api_kwargs={"style": "primary"})],
+        [InlineKeyboardButton("Set Interval", callback_data="set_interval", api_kwargs={"style": "primary"}),
+         InlineKeyboardButton("Analytics", callback_data="analytics", api_kwargs={"style": "primary"})],
         [InlineKeyboardButton("Start Ads", callback_data="start_ads", api_kwargs={"style": "primary"}),
          InlineKeyboardButton("Stop Ads", callback_data="stop_ads", api_kwargs={"style": "primary"})],
-        [InlineKeyboardButton("Analytics", callback_data="analytics", api_kwargs={"style": "primary"}),
-         InlineKeyboardButton("Auto Reply", callback_data="auto_reply", api_kwargs={"style": "primary"})],
-        [InlineKeyboardButton("Remove Account", callback_data="delete_account", api_kwargs={"style": "danger"})],
+        [InlineKeyboardButton("Auto Reply", callback_data="auto_reply", api_kwargs={"style": "primary"})],
         [InlineKeyboardButton("Home", callback_data="home", api_kwargs={"style": "danger"})],
     ])
     return text, keyboard

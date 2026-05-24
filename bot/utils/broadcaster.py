@@ -51,9 +51,7 @@ async def _download_file(file_id: str) -> bytes | None:
                     params={"file_id": file_id},
                 )
                 path = r.json()["result"]["file_path"]
-                r2 = await client.get(
-                    f"https://api.telegram.org/file/bot{BOT_TOKEN}/{path}"
-                )
+                r2 = await client.get(f"https://api.telegram.org/file/bot{BOT_TOKEN}/{path}")
                 return r2.content
         except Exception as e:
             logger.warning("download_file failed [%s]: %s", file_id, e)
@@ -69,8 +67,8 @@ async def _send_ad_via_pyrogram(client: Client, chat_id, ad_data: dict):
         await client.send_message(chat_id, text, parse_mode=ParseMode.HTML)
 
     elif msg_type == "forward":
-        msgs = await client.get_messages("me", limit=1)
-        if msgs and msgs[0] and msgs[0].id:
+        msgs = [m async for m in client.get_chat_history("me", limit=1)]
+        if msgs and msgs[0].id:
             await client.forward_messages(chat_id, "me", msgs[0].id)
         else:
             raise ValueError("No message in Saved Messages to forward")
@@ -79,36 +77,31 @@ async def _send_ad_via_pyrogram(client: Client, chat_id, ad_data: dict):
         data = await _download_file(ad_data["file_id"])
         if not data:
             raise ValueError("Could not download photo")
-        await client.send_photo(chat_id, io.BytesIO(data),
-                                caption=caption, parse_mode=ParseMode.HTML)
+        await client.send_photo(chat_id, io.BytesIO(data), caption=caption, parse_mode=ParseMode.HTML)
 
     elif msg_type == "video":
         data = await _download_file(ad_data["file_id"])
         if not data:
             raise ValueError("Could not download video")
-        await client.send_video(chat_id, io.BytesIO(data),
-                                caption=caption, parse_mode=ParseMode.HTML)
+        await client.send_video(chat_id, io.BytesIO(data), caption=caption, parse_mode=ParseMode.HTML)
 
     elif msg_type == "document":
         data = await _download_file(ad_data["file_id"])
         if not data:
             raise ValueError("Could not download document")
-        await client.send_document(chat_id, io.BytesIO(data),
-                                   caption=caption, parse_mode=ParseMode.HTML)
+        await client.send_document(chat_id, io.BytesIO(data), caption=caption, parse_mode=ParseMode.HTML)
 
     elif msg_type == "audio":
         data = await _download_file(ad_data["file_id"])
         if not data:
             raise ValueError("Could not download audio")
-        await client.send_audio(chat_id, io.BytesIO(data),
-                                caption=caption, parse_mode=ParseMode.HTML)
+        await client.send_audio(chat_id, io.BytesIO(data), caption=caption, parse_mode=ParseMode.HTML)
 
     elif msg_type == "animation":
         data = await _download_file(ad_data["file_id"])
         if not data:
             raise ValueError("Could not download animation")
-        await client.send_animation(chat_id, io.BytesIO(data),
-                                    caption=caption, parse_mode=ParseMode.HTML)
+        await client.send_animation(chat_id, io.BytesIO(data), caption=caption, parse_mode=ParseMode.HTML)
 
     elif msg_type == "sticker":
         data = await _download_file(ad_data["file_id"])
@@ -120,8 +113,7 @@ async def _send_ad_via_pyrogram(client: Client, chat_id, ad_data: dict):
         data = await _download_file(ad_data["file_id"])
         if not data:
             raise ValueError("Could not download voice")
-        await client.send_voice(chat_id, io.BytesIO(data),
-                                caption=caption, parse_mode=ParseMode.HTML)
+        await client.send_voice(chat_id, io.BytesIO(data), caption=caption, parse_mode=ParseMode.HTML)
 
     elif msg_type == "video_note":
         data = await _download_file(ad_data["file_id"])
@@ -145,7 +137,7 @@ def _group_link(group) -> str:
     return ""
 
 
-async def _process_account(owner_id: int, acc_num: int, acc: dict, effective_ad: dict) -> dict:
+async def _process_account(owner_id: int, acc_num: int, acc: dict) -> dict:
     report = {
         "num": acc_num,
         "phone": acc["phone"],
@@ -160,12 +152,26 @@ async def _process_account(owner_id: int, acc_num: int, acc: dict, effective_ad:
         try:
             client = await get_pyrogram_client(acc["session"])
             async with client:
+                msgs = [m async for m in client.get_chat_history("me", limit=1)]
+                if not msgs or not msgs[0].id:
+                    report["error"] = "No message in Saved Messages"
+                    await send_logs(
+                        owner_id,
+                        f"<b>⚠️ Account #{acc_num} — {acc.get('name', acc['phone'])}</b>\n"
+                        f"<code>{acc['phone']}</code>\n\n"
+                        "No message found in Saved Messages.\n"
+                        "Set your ad message from the bot first.",
+                    )
+                    return report
+
+                saved_msg_id = msgs[0].id
+
                 groups = []
                 async for dialog in client.get_dialogs(limit=0):
                     if dialog.chat.type in (ChatType.GROUP, ChatType.SUPERGROUP):
                         groups.append(dialog.chat)
 
-                logger.info("Account #%d: found %d groups", acc_num, len(groups))
+                logger.info("Account #%d: %d groups found", acc_num, len(groups))
 
                 group_sem = asyncio.Semaphore(5)
 
@@ -179,63 +185,29 @@ async def _process_account(owner_id: int, acc_num: int, acc: dict, effective_ad:
                         if not await db.is_ads_running(owner_id):
                             return
                         try:
-                            await _send_ad_via_pyrogram(client, gid, effective_ad)
-                            await db.log_broadcast(
-                                owner_id, acc["phone"], acc_num,
-                                gid, gtitle, gusername, True
-                            )
+                            await client.forward_messages(gid, "me", saved_msg_id)
+                            await db.log_broadcast(owner_id, acc["phone"], acc_num, gid, gtitle, gusername, True)
                             report["success"] += 1
-                            report["groups"].append({
-                                "title": gtitle, "username": gusername,
-                                "link": glink, "id": gid, "ok": True,
-                            })
+                            report["groups"].append({"title": gtitle, "username": gusername, "link": glink, "id": gid, "ok": True})
                         except FloodWait as e:
-                            wait = min(e.value, 30)
-                            await asyncio.sleep(wait)
+                            await asyncio.sleep(min(e.value, 30))
                             try:
-                                await _send_ad_via_pyrogram(client, gid, effective_ad)
-                                await db.log_broadcast(
-                                    owner_id, acc["phone"], acc_num,
-                                    gid, gtitle, gusername, True
-                                )
+                                await client.forward_messages(gid, "me", saved_msg_id)
+                                await db.log_broadcast(owner_id, acc["phone"], acc_num, gid, gtitle, gusername, True)
                                 report["success"] += 1
-                                report["groups"].append({
-                                    "title": gtitle, "username": gusername,
-                                    "link": glink, "id": gid, "ok": True,
-                                })
+                                report["groups"].append({"title": gtitle, "username": gusername, "link": glink, "id": gid, "ok": True})
                             except Exception as ex2:
-                                await db.log_broadcast(
-                                    owner_id, acc["phone"], acc_num,
-                                    gid, gtitle, gusername, False, str(ex2)
-                                )
+                                await db.log_broadcast(owner_id, acc["phone"], acc_num, gid, gtitle, gusername, False, str(ex2))
                                 report["failed"] += 1
-                                report["groups"].append({
-                                    "title": gtitle, "username": gusername,
-                                    "link": glink, "id": gid, "ok": False,
-                                    "err": str(ex2)[:60],
-                                })
+                                report["groups"].append({"title": gtitle, "username": gusername, "link": glink, "id": gid, "ok": False, "err": str(ex2)[:60]})
                         except (ChatWriteForbidden, UserBannedInChannel):
-                            await db.log_broadcast(
-                                owner_id, acc["phone"], acc_num,
-                                gid, gtitle, gusername, False, "No write permission"
-                            )
+                            await db.log_broadcast(owner_id, acc["phone"], acc_num, gid, gtitle, gusername, False, "No write permission")
                             report["failed"] += 1
-                            report["groups"].append({
-                                "title": gtitle, "username": gusername,
-                                "link": glink, "id": gid, "ok": False,
-                                "err": "No write permission",
-                            })
+                            report["groups"].append({"title": gtitle, "username": gusername, "link": glink, "id": gid, "ok": False, "err": "No write permission"})
                         except Exception as e:
-                            await db.log_broadcast(
-                                owner_id, acc["phone"], acc_num,
-                                gid, gtitle, gusername, False, str(e)
-                            )
+                            await db.log_broadcast(owner_id, acc["phone"], acc_num, gid, gtitle, gusername, False, str(e))
                             report["failed"] += 1
-                            report["groups"].append({
-                                "title": gtitle, "username": gusername,
-                                "link": glink, "id": gid, "ok": False,
-                                "err": str(e)[:60],
-                            })
+                            report["groups"].append({"title": gtitle, "username": gusername, "link": glink, "id": gid, "ok": False, "err": str(e)[:60]})
                     await asyncio.sleep(1)
 
                 await asyncio.gather(*[send_to_group(g) for g in groups], return_exceptions=True)
@@ -266,14 +238,7 @@ async def broadcast_for_user(owner_id: int):
     if not accounts:
         return
 
-    ad_data = await db.get_ad_message_data(owner_id)
-    mode = await db.get_broadcast_mode(owner_id)
-    effective_ad = {"type": "forward"} if mode == "forward" else (ad_data or {"type": "text", "text": ""})
-
-    tasks = [
-        _process_account(owner_id, i + 1, acc, effective_ad)
-        for i, acc in enumerate(accounts)
-    ]
+    tasks = [_process_account(owner_id, i + 1, acc) for i, acc in enumerate(accounts)]
     results = await asyncio.gather(*tasks, return_exceptions=True)
 
     interval = await db.get_interval(owner_id)
@@ -299,8 +264,7 @@ async def broadcast_for_user(owner_id: int):
         shown = 0
         for g in report["groups"]:
             if shown >= 50:
-                remaining = len(report["groups"]) - shown
-                lines.append(f"<i>... and {remaining} more groups</i>")
+                lines.append(f"<i>... and {len(report['groups']) - shown} more groups</i>")
                 break
             mark = "✓" if g["ok"] else "✗"
             name = g["title"][:35]

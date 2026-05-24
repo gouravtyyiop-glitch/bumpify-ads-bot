@@ -23,7 +23,8 @@ async def my_accounts_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
     for i, acc in enumerate(accounts, 1):
         uname = f"@{acc['username']}" if acc.get("username") else ""
         uid = f" · ID: <code>{acc['tg_user_id']}</code>" if acc.get("tg_user_id") else ""
-        lines.append(f"<code>{i}.</code> <b>{acc['name']}</b> {uname}{uid}")
+        status = "🟢" if acc.get("active", True) else "⚫"
+        lines.append(f"{status} <code>{i}.</code> <b>{acc['name']}</b> {uname}{uid}")
         lines.append(f"   <code>{acc['phone']}</code>")
     lines.append(f"\n<blockquote>Total active: <b>{len(accounts)}</b> account(s)</blockquote>")
 
@@ -37,7 +38,7 @@ async def my_accounts_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
 async def delete_account_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     user_id = update.effective_user.id
-    accounts = await db.get_accounts(user_id)
+    accounts = await db.get_all_accounts(user_id)
 
     if not accounts:
         await safe_edit(
@@ -81,17 +82,38 @@ async def analytics_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     user_id = update.effective_user.id
     stats = await db.get_broadcast_stats(user_id)
+    per_account = await db.get_per_account_stats(user_id)
     accounts = await db.get_accounts(user_id)
-    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Back", callback_data="dashboard", api_kwargs={"style": "danger"})]])
-    await safe_edit(
-        query,
-        "<b>Analytics</b>\n\n"
+
+    total = stats["total"]
+    success = stats["success"]
+    failed = stats["failed"]
+    rate = round(success / total * 100, 1) if total > 0 else 0
+
+    lines = [
+        "<b>📊 Analytics Overview</b>\n",
         "<blockquote>"
-        f"Total Sent: <b>{stats['total']}</b>\n"
-        f"Successful: <b>{stats['success']}</b>\n"
-        f"Failed: <b>{stats['failed']}</b>\n"
+        f"Total Broadcasts: <b>{total}</b>\n"
+        f"Successful: <b>{success}</b>\n"
+        f"Failed: <b>{failed}</b>\n"
+        f"Success Rate: <b>{rate}%</b>\n"
         f"Active Accounts: <b>{len(accounts)}</b>"
-        "</blockquote>\n\n"
-        "<i>Detailed per-group logs are sent to your logger bot after each cycle.</i>",
-        reply_markup=keyboard, parse_mode="HTML", context=context,
+        "</blockquote>",
+    ]
+
+    if per_account:
+        lines.append("\n<b>Per Account</b>")
+        for p in per_account[:10]:
+            acc_rate = round(p["success"] / p["total"] * 100, 1) if p["total"] > 0 else 0
+            phone = p["_id"]
+            lines.append(
+                f"\n<code>{phone}</code>\n"
+                f"  Sent: {p['success']} · Failed: {p['failed']} · Rate: {acc_rate}%"
+            )
+
+    lines.append(
+        "\n\n<i>Full real-time logs are sent to your logger bot after each broadcast cycle.</i>"
     )
+
+    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Back", callback_data="dashboard", api_kwargs={"style": "danger"})]])
+    await safe_edit(query, "\n".join(lines), reply_markup=keyboard, parse_mode="HTML", context=context)

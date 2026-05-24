@@ -1,7 +1,7 @@
 import asyncio
 import logging
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters
-from bot.config import BOT_TOKEN, LOGGER_BOT_TOKEN, PRIVATE_MODE, OWNER_ID
+from bot.config import BOT_TOKEN, LOGGER_BOT_TOKEN, PRIVATE_MODE, OWNER_IDS
 from bot.handlers.start import start_handler
 from bot.handlers.dashboard import dashboard_handler
 from bot.handlers.callbacks import callback_handler
@@ -18,17 +18,29 @@ logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 
 def _is_allowed(update) -> bool:
-    if not PRIVATE_MODE or not OWNER_ID:
+    if not PRIVATE_MODE:
         return True
     user = update.effective_user
-    return user is not None and user.id == OWNER_ID
+    if not user:
+        return False
+    if not OWNER_IDS:
+        logging.warning("PRIVATE_MODE enabled but no OWNER_IDS/OWNER_ID configured — blocking all users.")
+        return False
+    return user.id in OWNER_IDS
+
+
+PRIVATE_MSG = (
+    "🔒 <b>This bot is private.</b>\n\n"
+    "Access is restricted to authorized users only.\n"
+    "Contact the bot owner to request access."
+)
 
 
 async def message_handler(update, context):
     if not update.message:
         return
     if not _is_allowed(update):
-        await update.message.reply_text("⛔ This bot is in private mode.")
+        await update.message.reply_text(PRIVATE_MSG, parse_mode="HTML")
         return
     from bot.handlers.interval import handle_interval_text
     if await handle_interval_text(update, context):
@@ -42,14 +54,14 @@ async def message_handler(update, context):
 
 async def guarded_start_handler(update, context):
     if not _is_allowed(update):
-        await update.message.reply_text("⛔ This bot is in private mode.")
+        await update.message.reply_text(PRIVATE_MSG, parse_mode="HTML")
         return
     await start_handler(update, context)
 
 
 async def guarded_dashboard_handler(update, context):
     if not _is_allowed(update):
-        await update.message.reply_text("⛔ This bot is in private mode.")
+        await update.message.reply_text(PRIVATE_MSG, parse_mode="HTML")
         return
     await dashboard_handler(update, context)
 
@@ -57,7 +69,10 @@ async def guarded_dashboard_handler(update, context):
 async def guarded_callback_handler(update, context):
     if not _is_allowed(update):
         try:
-            await update.callback_query.answer("⛔ This bot is in private mode.", show_alert=True)
+            await update.callback_query.answer(
+                "🔒 This bot is private. Unauthorized access.",
+                show_alert=True
+            )
         except Exception:
             pass
         return

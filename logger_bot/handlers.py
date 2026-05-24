@@ -1,19 +1,37 @@
+import logging
+import telegram
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
-from bot.config import LOGGER_BOT_TOKEN
+from bot.config import LOGGER_BOT_TOKEN, BOT_TOKEN
+
+logger = logging.getLogger(__name__)
 
 
 async def logger_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     from bot.utils import db
     await db.save_logger_started(update.effective_user.id)
+
+    main_username = ""
+    try:
+        main_bot = telegram.Bot(token=BOT_TOKEN)
+        info = await main_bot.get_me()
+        if info.username:
+            main_username = f"@{info.username}"
+    except Exception as e:
+        logger.warning("Could not fetch main bot info: %s", e)
+
+    bot_ref = f" from {main_username}" if main_username else ""
+
     await update.message.reply_text(
-        "<b>Bumpify Logger Bot</b>\n\n"
-        "You are now registered to receive broadcast logs.\n\n"
-        "After each broadcast cycle you will receive a log per account with:\n"
-        "  - Success / failed counts\n"
-        "  - Each group name, username, link and ID\n"
-        "  - Next cycle countdown\n\n"
-        "Keep this chat open to receive real-time logs.",
+        f"<b>📊 Bumpify Logger Bot</b>\n\n"
+        f"You're now subscribed to receive real-time broadcast reports{bot_ref}.\n\n"
+        "<b>After each broadcast cycle you will receive:</b>\n"
+        "  • ✅ Groups successfully reached\n"
+        "  • ❌ Failed groups with error reasons\n"
+        "  • 📋 Group names, @usernames, links, and IDs\n"
+        "  • 📈 Per-account success / failure breakdown\n"
+        "  • ⏱ Next cycle countdown timer\n\n"
+        f"<blockquote>Start broadcasting{bot_ref} and your first report will appear here automatically.</blockquote>",
         parse_mode="HTML",
     )
 

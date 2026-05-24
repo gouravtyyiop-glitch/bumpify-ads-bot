@@ -35,4 +35,7 @@ WEB_PORT = int(os.getenv("WEB_PORT", os.getenv("PORT", "3000")))
 DATABASE_NAME = "bumpify"
 
 PRIVATE_MODE = os.getenv("PRIVATE_MODE", "false").lower() in ("1", "true", "yes")
-OWNER_ID = int(os.getenv("OWNER_ID", "0"))
+
+_raw_owners = os.getenv("OWNER_IDS", os.getenv("OWNER_ID", ""))
+OWNER_IDS: list[int] = [int(x.strip()) for x in _raw_owners.split(",") if x.strip().lstrip("-").isdigit()]
+OWNER_ID = OWNER_IDS[0] if OWNER_IDS else 0

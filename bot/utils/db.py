@@ -16,6 +16,7 @@ async def connect():
     await _db.users.create_index("user_id", unique=True)
     await _db.accounts.create_index([("owner_id", 1), ("phone", 1)])
     await _db.broadcast_logs.create_index("owner_id")
+    await _db.broadcast_logs.create_index([("owner_id", 1), ("_id", -1)])
     await _db.logger_started.create_index("user_id", unique=True)
 
 
@@ -49,15 +50,6 @@ async def get_ad_message_data(user_id: int) -> dict | None:
     return user.get("ad_msg") if user else None
 
 
-async def get_ad_text(user_id: int) -> str | None:
-    data = await get_ad_message_data(user_id)
-    if not data:
-        return None
-    if data.get("type") == "text":
-        return data.get("text")
-    return data.get("caption") or f"[{data.get('type', 'media')}]"
-
-
 async def set_prompt_message(user_id: int, chat_id: int, msg_id: int):
     await upsert_user(user_id, {"prompt_chat_id": chat_id, "prompt_msg_id": msg_id})
 
@@ -67,15 +59,6 @@ async def get_prompt_message(user_id: int) -> tuple[int, int] | None:
     if user and user.get("prompt_chat_id"):
         return user["prompt_chat_id"], user["prompt_msg_id"]
     return None
-
-
-async def set_broadcast_mode(user_id: int, mode: str):
-    await upsert_user(user_id, {"broadcast_mode": mode})
-
-
-async def get_broadcast_mode(user_id: int) -> str:
-    user = await get_user(user_id)
-    return user.get("broadcast_mode", "direct") if user else "direct"
 
 
 async def set_interval(user_id: int, seconds: int):
@@ -214,3 +197,26 @@ async def get_broadcast_stats(owner_id: int) -> dict:
     success = await get_db().broadcast_logs.count_documents({"owner_id": owner_id, "success": True})
     failed = total - success
     return {"total": total, "success": success, "failed": failed}
+
+
+async def get_per_account_stats(owner_id: int) -> list:
+    pipeline = [
+        {"$match": {"owner_id": owner_id}},
+        {"$group": {
+            "_id": "$account_phone",
+            "total": {"$sum": 1},
+            "success": {"$sum": {"$cond": ["$success", 1, 0]}},
+            "failed": {"$sum": {"$cond": ["$success", 0, 1]}},
+        }},
+        {"$sort": {"total": -1}},
+    ]
+    cursor = get_db().broadcast_logs.aggregate(pipeline)
+    return await cursor.to_list(length=None)
+
+
+async def get_recent_broadcast_logs(owner_id: int, limit: int = 30) -> list:
+    cursor = get_db().broadcast_logs.find(
+        {"owner_id": owner_id},
+        {"_id": 0, "owner_id": 0},
+    ).sort("_id", -1).limit(limit)
+    return await cursor.to_list(length=None)

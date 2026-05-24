@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Bumpify — Account Panel</title>
+<title>Bumpify</title>
 <link rel="stylesheet" href="/static/style.css">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
@@ -12,26 +12,42 @@
 
   <header class="header">
     <div class="header-inner">
-      <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-      </svg>
+      <div class="logo-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+        </svg>
+      </div>
       <div class="header-text">
-        <div class="logo-name">Bumpify</div>
-        <div class="logo-sub">Account Manager</div>
+        <span class="logo-name">Bumpify</span>
+        <span class="logo-sep">·</span>
+        <span class="logo-sub" id="header-subtitle">Account Manager</span>
       </div>
     </div>
   </header>
 
   <div id="main-screen" class="screen active">
-    <div class="section-label">Accounts</div>
-    <div id="accounts-list" class="accounts-list">
-      <div class="skeleton-card"></div>
-      <div class="skeleton-card"></div>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('accounts')" id="tab-accounts">Accounts</button>
+      <button class="tab" onclick="switchTab('analytics')" id="tab-analytics">Analytics</button>
     </div>
-    <button class="btn btn-primary full-width" onclick="showAddScreen()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      Add Account
-    </button>
+
+    <div id="tab-content-accounts" class="tab-content active">
+      <div id="accounts-list" class="accounts-list">
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+      </div>
+      <button class="btn btn-primary full-width" onclick="showAddScreen()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add Account
+      </button>
+    </div>
+
+    <div id="tab-content-analytics" class="tab-content">
+      <div id="stats-content">
+        <div class="skeleton-card" style="height:88px;"></div>
+        <div class="skeleton-card" style="height:200px;margin-top:12px;"></div>
+      </div>
+    </div>
   </div>
 
   <div id="add-screen" class="screen">
@@ -41,7 +57,6 @@
     </div>
     <div class="form-card">
       <div class="form-title">Add Telegram Account</div>
-
       <div id="step-phone" class="step active">
         <div class="field-group">
           <label class="field-label">Country</label>
@@ -64,7 +79,7 @@
       <div id="step-otp" class="step">
         <div class="field-group">
           <label class="field-label">Verification Code</label>
-          <input type="text" id="otp-input" class="input-field otp-field" placeholder="· · · · ·" maxlength="6" inputmode="numeric" autocomplete="one-time-code">
+          <input type="text" id="otp-input" class="input-field otp-field" placeholder="·····" maxlength="6" inputmode="numeric" autocomplete="one-time-code">
           <div class="field-hint">Code sent to your phone via Telegram</div>
         </div>
         <div id="step-2fa" class="field-group" style="display:none;">
@@ -93,7 +108,7 @@
       </div>
       <div class="success-name" id="success-name"></div>
       <div class="success-meta" id="success-meta"></div>
-      <div class="success-note">Account connected. Display name updated with -Bumpify suffix.</div>
+      <div class="success-note">Account connected successfully.</div>
       <button class="btn btn-primary full-width" onclick="showMainScreen()">View Accounts</button>
     </div>
   </div>

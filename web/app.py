@@ -135,6 +135,38 @@ async def remove_account(request: web.Request):
         return web.json_response({"ok": False, "error": str(e)})
 
 
+@routes.get("/api/stats")
+async def get_stats(request: web.Request):
+    try:
+        user_id = int(request.query.get("user_id", 0))
+        if not user_id:
+            return web.json_response({"ok": False, "error": "Missing user_id"})
+        stats = await db.get_broadcast_stats(user_id)
+        per_account = await db.get_per_account_stats(user_id)
+        recent = await db.get_recent_broadcast_logs(user_id, 30)
+        rate = round(stats["success"] / stats["total"] * 100, 1) if stats["total"] > 0 else 0
+        return web.json_response({
+            "ok": True,
+            "total": stats["total"],
+            "success": stats["success"],
+            "failed": stats["failed"],
+            "rate": rate,
+            "per_account": [
+                {
+                    "phone": p["_id"],
+                    "total": p["total"],
+                    "success": p["success"],
+                    "failed": p["failed"],
+                    "rate": round(p["success"] / p["total"] * 100, 1) if p["total"] > 0 else 0,
+                }
+                for p in per_account
+            ],
+            "recent": recent,
+        })
+    except Exception as e:
+        return web.json_response({"ok": False, "error": str(e)})
+
+
 def build_web_app() -> web.Application:
     app = web.Application()
     app.add_routes(routes)
