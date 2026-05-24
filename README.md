@@ -2,7 +2,7 @@
 
 <img src="https://i.ibb.co/B56nZRw3/file-4027.jpg" width="100" style="border-radius:18px" alt="Bumpify"/>
 
-<h1>Bumpify Ads Bot</h1>
+<h1>Floxyads Ads Bot</h1>
 
 <p>Professional Telegram group ad broadcasting automation.<br>
 Multi-account &nbsp;·&nbsp; AES-256 encrypted sessions &nbsp;·&nbsp; Real-time logs &nbsp;·&nbsp; Web analytics panel</p>
