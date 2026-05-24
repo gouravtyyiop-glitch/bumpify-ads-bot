@@ -4,6 +4,8 @@ from bot.config import LOGGER_BOT_TOKEN
 
 
 async def logger_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    from bot.utils import db
+    await db.save_logger_started(update.effective_user.id)
     await update.message.reply_text(
         "<b>Bumpify Logger Bot</b>\n\n"
         "You are now registered to receive broadcast logs.\n\n"

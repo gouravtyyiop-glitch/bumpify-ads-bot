@@ -12,14 +12,14 @@ async def auto_reply_handler(update: Update, context: ContextTypes.DEFAULT_TYPE)
     text = await db.get_auto_reply_text(user_id) or AUTO_REPLY_TEXT
     preview = text[:120] + "..." if len(text) > 120 else text
     status = "ON" if enabled else "OFF"
-    toggle_label = "Turn OFF" if enabled else "Turn ON"
 
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton(
             f"{'Disable' if enabled else 'Enable'} Auto Reply",
-            callback_data="toggle_auto_reply"
+            callback_data="toggle_auto_reply",
+            api_kwargs={"style": "primary"},
         )],
-        [InlineKeyboardButton("Set Custom Text", callback_data="set_auto_reply_text")],
+        [InlineKeyboardButton("Set Custom Text", callback_data="set_auto_reply_text", api_kwargs={"style": "primary"})],
         [InlineKeyboardButton("Back to Dashboard", callback_data="dashboard", api_kwargs={"style": "success"})],
     ])
     await safe_edit(
@@ -47,7 +47,7 @@ async def toggle_auto_reply_handler(update: Update, context: ContextTypes.DEFAUL
         await stop_auto_reply(user_id)
 
     keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("Auto Reply Settings", callback_data="auto_reply")],
+        [InlineKeyboardButton("Auto Reply Settings", callback_data="auto_reply", api_kwargs={"style": "primary"})],
         [InlineKeyboardButton("Back to Dashboard", callback_data="dashboard", api_kwargs={"style": "success"})],
     ])
     await safe_edit(
@@ -92,7 +92,7 @@ async def handle_auto_reply_text(update: Update, context: ContextTypes.DEFAULT_T
     except Exception:
         pass
     keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("Auto Reply Settings", callback_data="auto_reply")],
+        [InlineKeyboardButton("Auto Reply Settings", callback_data="auto_reply", api_kwargs={"style": "primary"})],
         [InlineKeyboardButton("Dashboard", callback_data="dashboard", api_kwargs={"style": "success"})],
     ])
     await update.message.reply_text(

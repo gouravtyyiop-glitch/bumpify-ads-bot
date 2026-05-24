@@ -34,21 +34,25 @@ async def _build_dashboard_content(user_id: int) -> tuple[str, InlineKeyboardMar
     )
 
     add_acc_btn = (
-        InlineKeyboardButton("Add Account", web_app=WebAppInfo(url=WEB_APP_URL))
+        InlineKeyboardButton("Add Account", web_app=WebAppInfo(url=WEB_APP_URL), api_kwargs={"style": "primary"})
         if WEB_APP_URL
-        else InlineKeyboardButton("Add Account", callback_data="add_account")
+        else InlineKeyboardButton("Add Account", callback_data="add_account", api_kwargs={"style": "primary"})
     )
 
+    ad_row = [InlineKeyboardButton("Set Ad Message", callback_data="set_ad", api_kwargs={"style": "primary"})]
+    if ad_data:
+        ad_row.append(InlineKeyboardButton("Remove Ad", callback_data="remove_ad", api_kwargs={"style": "danger"}))
+
     keyboard = InlineKeyboardMarkup([
-        [add_acc_btn, InlineKeyboardButton("My Accounts", callback_data="my_accounts")],
-        [InlineKeyboardButton("Set Ad Message", callback_data="set_ad"),
-         InlineKeyboardButton("Send Mode", callback_data="toggle_mode")],
-        [InlineKeyboardButton("Start Ads", callback_data="start_ads"),
-         InlineKeyboardButton("Stop Ads", callback_data="stop_ads")],
-        [InlineKeyboardButton("Set Interval", callback_data="set_interval"),
-         InlineKeyboardButton("Analytics", callback_data="analytics")],
-        [InlineKeyboardButton("Auto Reply", callback_data="auto_reply"),
-         InlineKeyboardButton("Remove Account", callback_data="delete_account")],
+        [add_acc_btn, InlineKeyboardButton("My Accounts", callback_data="my_accounts", api_kwargs={"style": "primary"})],
+        ad_row,
+        [InlineKeyboardButton("Send Mode", callback_data="toggle_mode", api_kwargs={"style": "primary"}),
+         InlineKeyboardButton("Set Interval", callback_data="set_interval", api_kwargs={"style": "primary"})],
+        [InlineKeyboardButton("Start Ads", callback_data="start_ads", api_kwargs={"style": "primary"}),
+         InlineKeyboardButton("Stop Ads", callback_data="stop_ads", api_kwargs={"style": "primary"})],
+        [InlineKeyboardButton("Analytics", callback_data="analytics", api_kwargs={"style": "primary"}),
+         InlineKeyboardButton("Auto Reply", callback_data="auto_reply", api_kwargs={"style": "primary"})],
+        [InlineKeyboardButton("Remove Account", callback_data="delete_account", api_kwargs={"style": "danger"})],
         [InlineKeyboardButton("Home", callback_data="home", api_kwargs={"style": "danger"})],
     ])
     return text, keyboard

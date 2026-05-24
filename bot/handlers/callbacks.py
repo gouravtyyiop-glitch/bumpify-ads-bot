@@ -42,6 +42,10 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             from bot.handlers.ads import set_ad_handler
             await set_ad_handler(update, context)
 
+        elif data == "remove_ad":
+            from bot.handlers.ads import remove_ad_handler
+            await remove_ad_handler(update, context)
+
         elif data == "start_ads":
             from bot.handlers.ads import start_ads_handler
             await start_ads_handler(update, context)
@@ -118,9 +122,9 @@ async def _home_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"\n\n<blockquote><b>Important:</b> Start @{LOGGER_BOT_USERNAME} first "
             "to receive real-time broadcast logs.</blockquote>"
         )
-    second_row = [InlineKeyboardButton("FAQ", callback_data="faq", api_kwargs={"style": "danger"})]
+    second_row = [InlineKeyboardButton("FAQ", callback_data="faq", api_kwargs={"style": "primary"})]
     if WEB_APP_URL:
-        second_row.append(InlineKeyboardButton("Web Panel", web_app=WebAppInfo(url=WEB_APP_URL), api_kwargs={"style": "danger"}))
+        second_row.append(InlineKeyboardButton("Web Panel", web_app=WebAppInfo(url=WEB_APP_URL), api_kwargs={"style": "primary"}))
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton("Open Dashboard", callback_data="dashboard", api_kwargs={"style": "success"})],
         second_row,
@@ -131,10 +135,22 @@ async def _home_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def _add_account_fallback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
-    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Back", callback_data="dashboard", api_kwargs={"style": "danger"})]])
-    await safe_edit(
-        query,
-        "<b>Add Account</b>\n\n"
-        "<blockquote>Set <code>WEB_APP_URL</code> in your environment to enable the web panel.</blockquote>",
-        reply_markup=keyboard, parse_mode="HTML", context=context,
-    )
+    if WEB_APP_URL:
+        keyboard = InlineKeyboardMarkup([
+            [InlineKeyboardButton("Open Web Panel", web_app=WebAppInfo(url=WEB_APP_URL), api_kwargs={"style": "primary"})],
+            [InlineKeyboardButton("Back", callback_data="dashboard", api_kwargs={"style": "danger"})],
+        ])
+        await safe_edit(
+            query,
+            "<b>Add Account</b>\n\n"
+            "<blockquote>Use the web panel to log in with your phone number and OTP.</blockquote>",
+            reply_markup=keyboard, parse_mode="HTML", context=context,
+        )
+    else:
+        keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Back", callback_data="dashboard", api_kwargs={"style": "danger"})]])
+        await safe_edit(
+            query,
+            "<b>Add Account</b>\n\n"
+            "<blockquote>Set <code>WEB_APP_URL</code> in your environment to enable the web panel.</blockquote>",
+            reply_markup=keyboard, parse_mode="HTML", context=context,
+        )

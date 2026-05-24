@@ -16,6 +16,7 @@ async def connect():
     await _db.users.create_index("user_id", unique=True)
     await _db.accounts.create_index([("owner_id", 1), ("phone", 1)])
     await _db.broadcast_logs.create_index("owner_id")
+    await _db.logger_started.create_index("user_id", unique=True)
 
 
 async def close():
@@ -35,6 +36,12 @@ async def upsert_user(user_id: int, data: dict):
 
 async def set_ad_message_data(user_id: int, data: dict):
     await upsert_user(user_id, {"ad_msg": data})
+
+
+async def clear_ad_message_data(user_id: int):
+    await get_db().users.update_one(
+        {"user_id": user_id}, {"$unset": {"ad_msg": ""}}
+    )
 
 
 async def get_ad_message_data(user_id: int) -> dict | None:
@@ -132,6 +139,17 @@ async def set_waiting_for_auto_reply(user_id: int, value: bool):
 async def is_waiting_for_auto_reply(user_id: int) -> bool:
     user = await get_user(user_id)
     return user.get("waiting_for_auto_reply", False) if user else False
+
+
+async def save_logger_started(user_id: int):
+    await get_db().logger_started.update_one(
+        {"user_id": user_id}, {"$set": {"user_id": user_id}}, upsert=True
+    )
+
+
+async def is_logger_started(user_id: int) -> bool:
+    doc = await get_db().logger_started.find_one({"user_id": user_id})
+    return doc is not None
 
 
 async def add_account(owner_id: int, phone: str, session_encrypted: str, name: str,

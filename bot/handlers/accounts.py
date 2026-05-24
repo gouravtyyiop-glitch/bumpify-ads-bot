@@ -28,7 +28,7 @@ async def my_accounts_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
     lines.append(f"\n<blockquote>Total active: <b>{len(accounts)}</b> account(s)</blockquote>")
 
     keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("Remove Account", callback_data="delete_account")],
+        [InlineKeyboardButton("Remove Account", callback_data="delete_account", api_kwargs={"style": "danger"})],
         [InlineKeyboardButton("Back", callback_data="dashboard", api_kwargs={"style": "danger"})],
     ])
     await safe_edit(query, "\n".join(lines), reply_markup=keyboard, parse_mode="HTML", context=context)
@@ -51,7 +51,8 @@ async def delete_account_handler(update: Update, context: ContextTypes.DEFAULT_T
     buttons = [
         [InlineKeyboardButton(
             f"{acc['name']} ({acc['phone']})",
-            callback_data=f"del_acc_{acc['phone']}"
+            callback_data=f"del_acc_{acc['phone']}",
+            api_kwargs={"style": "danger"},
         )]
         for acc in accounts
     ]
@@ -68,7 +69,7 @@ async def confirm_delete_handler(update: Update, context: ContextTypes.DEFAULT_T
     query = update.callback_query
     user_id = update.effective_user.id
     await db.remove_account(user_id, phone)
-    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Back", callback_data="dashboard", api_kwargs={"style": "danger"})]])
+    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Dashboard", callback_data="dashboard", api_kwargs={"style": "success"})]])
     await safe_edit(
         query,
         f"<b>Account removed.</b>\n\n<blockquote><code>{phone}</code> has been disconnected.</blockquote>",

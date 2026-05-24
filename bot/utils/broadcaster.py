@@ -3,7 +3,7 @@ import io
 import logging
 import httpx
 from pyrogram import Client
-from pyrogram.enums import ParseMode
+from pyrogram.enums import ParseMode, ChatType
 from pyrogram.errors import FloodWait, ChatWriteForbidden, UserBannedInChannel, SessionRevoked, AuthKeyUnregistered
 from bot.utils.session_manager import get_pyrogram_client
 from bot.utils import db
@@ -13,8 +13,22 @@ from bot.config import BOT_TOKEN
 logger = logging.getLogger(__name__)
 
 _active_tasks: dict[int, asyncio.Task] = {}
-_dl_semaphore = asyncio.Semaphore(8)
-_acc_semaphore = asyncio.Semaphore(10)
+_dl_semaphore: asyncio.Semaphore | None = None
+_acc_semaphore: asyncio.Semaphore | None = None
+
+
+def _get_dl_sem() -> asyncio.Semaphore:
+    global _dl_semaphore
+    if _dl_semaphore is None:
+        _dl_semaphore = asyncio.Semaphore(8)
+    return _dl_semaphore
+
+
+def _get_acc_sem() -> asyncio.Semaphore:
+    global _acc_semaphore
+    if _acc_semaphore is None:
+        _acc_semaphore = asyncio.Semaphore(10)
+    return _acc_semaphore
 
 
 async def send_logs(owner_id: int, text: str):
@@ -29,7 +43,7 @@ async def send_logs(owner_id: int, text: str):
 
 
 async def _download_file(file_id: str) -> bytes | None:
-    async with _dl_semaphore:
+    async with _get_dl_sem():
         try:
             async with httpx.AsyncClient(timeout=60) as client:
                 r = await client.get(
@@ -46,12 +60,13 @@ async def _download_file(file_id: str) -> bytes | None:
             return None
 
 
-async def _send_ad_via_pyrogram(client: Client, chat_id: int, ad_data: dict):
+async def _send_ad_via_pyrogram(client: Client, chat_id, ad_data: dict):
     msg_type = ad_data.get("type")
     caption = ad_data.get("caption", "") or ""
 
     if msg_type == "text":
-        await client.send_message(chat_id, ad_data["text"], parse_mode=ParseMode.HTML)
+        text = ad_data.get("text", "") or ""
+        await client.send_message(chat_id, text, parse_mode=ParseMode.HTML)
 
     elif msg_type == "forward":
         msgs = await client.get_messages("me", limit=1)
@@ -141,16 +156,18 @@ async def _process_account(owner_id: int, acc_num: int, acc: dict, effective_ad:
         "error": None,
     }
 
-    async with _acc_semaphore:
+    async with _get_acc_sem():
         try:
             client = await get_pyrogram_client(acc["session"])
             async with client:
                 groups = []
-                async for dialog in client.get_dialogs():
-                    if dialog.chat.type.name in ("GROUP", "SUPERGROUP"):
+                async for dialog in client.get_dialogs(limit=0):
+                    if dialog.chat.type in (ChatType.GROUP, ChatType.SUPERGROUP):
                         groups.append(dialog.chat)
 
-                group_sem = asyncio.Semaphore(3)
+                logger.info("Account #%d: found %d groups", acc_num, len(groups))
+
+                group_sem = asyncio.Semaphore(5)
 
                 async def send_to_group(group):
                     gid = group.id
@@ -172,10 +189,9 @@ async def _process_account(owner_id: int, acc_num: int, acc: dict, effective_ad:
                                 "title": gtitle, "username": gusername,
                                 "link": glink, "id": gid, "ok": True,
                             })
-                            await asyncio.sleep(2)
-
                         except FloodWait as e:
-                            await asyncio.sleep(min(e.value, 60))
+                            wait = min(e.value, 30)
+                            await asyncio.sleep(wait)
                             try:
                                 await _send_ad_via_pyrogram(client, gid, effective_ad)
                                 await db.log_broadcast(
@@ -198,8 +214,7 @@ async def _process_account(owner_id: int, acc_num: int, acc: dict, effective_ad:
                                     "link": glink, "id": gid, "ok": False,
                                     "err": str(ex2)[:60],
                                 })
-
-                        except (ChatWriteForbidden, UserBannedInChannel) as e:
+                        except (ChatWriteForbidden, UserBannedInChannel):
                             await db.log_broadcast(
                                 owner_id, acc["phone"], acc_num,
                                 gid, gtitle, gusername, False, "No write permission"
@@ -210,7 +225,6 @@ async def _process_account(owner_id: int, acc_num: int, acc: dict, effective_ad:
                                 "link": glink, "id": gid, "ok": False,
                                 "err": "No write permission",
                             })
-
                         except Exception as e:
                             await db.log_broadcast(
                                 owner_id, acc["phone"], acc_num,
@@ -222,10 +236,11 @@ async def _process_account(owner_id: int, acc_num: int, acc: dict, effective_ad:
                                 "link": glink, "id": gid, "ok": False,
                                 "err": str(e)[:60],
                             })
+                    await asyncio.sleep(1)
 
                 await asyncio.gather(*[send_to_group(g) for g in groups], return_exceptions=True)
 
-        except (SessionRevoked, AuthKeyUnregistered) as e:
+        except (SessionRevoked, AuthKeyUnregistered):
             report["error"] = "Session expired — account removed"
             await db.remove_account(owner_id, acc["phone"])
             await send_logs(
@@ -276,9 +291,9 @@ async def broadcast_for_user(owner_id: int):
         lines = [
             f"<b>Account #{report['num']} — {report['name']}</b>",
             f"<code>{report['phone']}</code>",
-            f"",
+            "",
             f"Sent: <b>{report['success']}</b>  |  Failed: <b>{report['failed']}</b>  |  Total: <b>{len(report['groups'])}</b>",
-            f"",
+            "",
         ]
 
         shown = 0
@@ -326,7 +341,3 @@ async def stop_broadcast(owner_id: int):
     task = _active_tasks.pop(owner_id, None)
     if task and not task.done():
         task.cancel()
-        try:
-            await asyncio.wait_for(asyncio.shield(task), timeout=2)
-        except Exception:
-            pass

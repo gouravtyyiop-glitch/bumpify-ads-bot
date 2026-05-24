@@ -1,11 +1,12 @@
 import asyncio
 import logging
-from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
+from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 from telegram.ext import ContextTypes
 from bot.utils import db
 from bot.utils.helpers import safe_edit
 from bot.utils.broadcaster import start_broadcast, stop_broadcast, _send_ad_via_pyrogram
 from bot.utils.session_manager import get_pyrogram_client
+from bot.config import WEB_APP_URL, LOGGER_BOT_TOKEN, LOGGER_BOT_USERNAME
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +35,7 @@ async def set_ad_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "<blockquote>Forward any message from your Saved Messages, or send any message directly.\n"
         "Supports text, photos, videos, documents, audio, stickers — everything Telegram supports.\n"
         "Full formatting is preserved: bold, italic, code, blockquote, strikethrough, underline.</blockquote>\n\n"
-        "Your message will be deleted automatically after saving.",
+        "Send your message now. It will be deleted automatically after saving.",
         reply_markup=keyboard,
         parse_mode="HTML",
         context=context,
@@ -107,7 +108,7 @@ async def handle_ad_message(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     elif msg.text:
         ad_data = {
             "type": "text",
-            "text": msg.text_html if msg.text_html else msg.text,
+            "text": msg.text_html or msg.text or "",
         }
     else:
         await db.set_waiting_for_ad(user_id, True)
@@ -158,13 +159,28 @@ async def _build_dashboard_content_local(user_id: int):
     return await _build_dashboard_content(user_id)
 
 
+async def remove_ad_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    user_id = update.effective_user.id
+    await db.clear_ad_message_data(user_id)
+    keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Dashboard", callback_data="dashboard", api_kwargs={"style": "success"})]])
+    await safe_edit(
+        query,
+        "<b>Ad message removed.</b>\n\n"
+        "<blockquote>Your ad has been cleared. Set a new one from the dashboard whenever you're ready.</blockquote>",
+        reply_markup=keyboard, parse_mode="HTML", context=context,
+    )
+
+
 async def start_ads_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     user_id = update.effective_user.id
 
     ad_data = await db.get_ad_message_data(user_id)
     if not ad_data:
-        keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Set Ad Message", callback_data="set_ad", api_kwargs={"style": "primary"})]])
+        keyboard = InlineKeyboardMarkup([[
+            InlineKeyboardButton("Set Ad Message", callback_data="set_ad", api_kwargs={"style": "primary"})
+        ]])
         await safe_edit(
             query,
             "<b>No ad message set.</b>\n\n"
@@ -175,11 +191,27 @@ async def start_ads_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     accounts = await db.get_accounts(user_id)
     if not accounts:
-        keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Add Account", callback_data="add_account", api_kwargs={"style": "primary"})]])
+        add_btn = (
+            InlineKeyboardButton("Add Account", web_app=WebAppInfo(url=WEB_APP_URL), api_kwargs={"style": "primary"})
+            if WEB_APP_URL
+            else InlineKeyboardButton("Add Account", callback_data="add_account", api_kwargs={"style": "primary"})
+        )
         await safe_edit(
             query,
             "<b>No accounts connected.</b>\n\n"
             "<blockquote>Add at least one Telegram account before starting ads.</blockquote>",
+            reply_markup=InlineKeyboardMarkup([[add_btn]]), parse_mode="HTML", context=context,
+        )
+        return
+
+    if LOGGER_BOT_TOKEN and not await db.is_logger_started(user_id):
+        note = f" @{LOGGER_BOT_USERNAME}" if LOGGER_BOT_USERNAME else ""
+        keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Dashboard", callback_data="dashboard", api_kwargs={"style": "success"})]])
+        await safe_edit(
+            query,
+            f"<b>Start your Logger Bot first!</b>\n\n"
+            f"<blockquote>Open your logger bot{note} and send /start before starting ads.\n\n"
+            "This ensures you receive broadcast logs and reports after each cycle.</blockquote>",
             reply_markup=keyboard, parse_mode="HTML", context=context,
         )
         return
@@ -228,7 +260,7 @@ async def toggle_mode_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
     await db.set_broadcast_mode(user_id, new_mode)
     mode_label = "Forward (from Saved Messages)" if new_mode == "forward" else "Direct (send stored content)"
     keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("Switch Again", callback_data="toggle_mode")],
+        [InlineKeyboardButton("Switch Again", callback_data="toggle_mode", api_kwargs={"style": "primary"})],
         [InlineKeyboardButton("Dashboard", callback_data="dashboard", api_kwargs={"style": "success"})],
     ])
     await safe_edit(

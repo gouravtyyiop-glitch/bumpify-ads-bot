@@ -10,13 +10,13 @@ async def set_interval_handler(update: Update, context: ContextTypes.DEFAULT_TYP
     mins, secs = divmod(current, 60)
     current_label = f"{mins}m {secs}s" if mins else f"{secs}s"
     keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("5 min", callback_data="interval_300"),
-         InlineKeyboardButton("10 min", callback_data="interval_600"),
-         InlineKeyboardButton("15 min", callback_data="interval_900")],
-        [InlineKeyboardButton("30 min", callback_data="interval_1800"),
-         InlineKeyboardButton("1 hour", callback_data="interval_3600"),
-         InlineKeyboardButton("2 hours", callback_data="interval_7200")],
-        [InlineKeyboardButton("Custom", callback_data="interval_custom")],
+        [InlineKeyboardButton("5 min", callback_data="interval_300", api_kwargs={"style": "primary"}),
+         InlineKeyboardButton("10 min", callback_data="interval_600", api_kwargs={"style": "primary"}),
+         InlineKeyboardButton("15 min", callback_data="interval_900", api_kwargs={"style": "primary"})],
+        [InlineKeyboardButton("30 min", callback_data="interval_1800", api_kwargs={"style": "primary"}),
+         InlineKeyboardButton("1 hour", callback_data="interval_3600", api_kwargs={"style": "primary"}),
+         InlineKeyboardButton("2 hours", callback_data="interval_7200", api_kwargs={"style": "primary"})],
+        [InlineKeyboardButton("Custom", callback_data="interval_custom", api_kwargs={"style": "primary"})],
         [InlineKeyboardButton("Back", callback_data="dashboard", api_kwargs={"style": "danger"})],
     ])
     await safe_edit(
