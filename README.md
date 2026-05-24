@@ -1,116 +1,130 @@
 <div align="center">
 
-<img src="https://i.ibb.co/B56nZRw3/file-4027.jpg" alt="Bumpify Ads Bot" width="120" style="border-radius:16px"/>
+<img src="https://i.ibb.co/B56nZRw3/file-4027.jpg" width="100" style="border-radius:18px" alt="Bumpify"/>
 
-<h1>🚀 Bumpify Ads Bot</h1>
+<h1>Bumpify Ads Bot</h1>
 
-<p><strong>Professional Telegram group ad broadcasting automation</strong><br>
-Multi-account · All media types · AES-256 encrypted sessions · Real-time logs</p>
+<p>Professional Telegram group ad broadcasting automation.<br>
+Multi-account &nbsp;·&nbsp; AES-256 encrypted sessions &nbsp;·&nbsp; Real-time logs &nbsp;·&nbsp; Web analytics panel</p>
 
 <p>
-  <img src="https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Pyrogram-MTProto-2CA5E0?style=flat-square&logo=telegram&logoColor=white"/>
   <img src="https://img.shields.io/badge/MongoDB-Motor-47A248?style=flat-square&logo=mongodb&logoColor=white"/>
-  <img src="https://img.shields.io/badge/Telegram-Bot%20API%209.4-0088CC?style=flat-square&logo=telegram&logoColor=white"/>
-  <img src="https://img.shields.io/badge/Pyrogram-MTProto-2CA5E0?style=flat-square"/>
-  <img src="https://img.shields.io/badge/License-MIT-black?style=flat-square"/>
+  <img src="https://img.shields.io/badge/Bot_API-9.4-0088CC?style=flat-square&logo=telegram&logoColor=white"/>
+  <img src="https://img.shields.io/badge/License-MIT-111827?style=flat-square"/>
 </p>
 
 <p>
   <a href="https://t.me/pythontodayz">
-    <img src="https://img.shields.io/badge/Telegram-Join%20Channel-0088CC?style=for-the-badge&logo=telegram&logoColor=white"/>
+    <img src="https://img.shields.io/badge/Telegram-Channel-0088CC?style=for-the-badge&logo=telegram&logoColor=white"/>
   </a>
   &nbsp;
-  <a href="https://github.com/pooraddyy/bumpify-ads-bot">
-    <img src="https://img.shields.io/badge/GitHub-Star%20Repo-black?style=for-the-badge&logo=github"/>
+  <a href="https://github.com/pooraddyy/bumpify-ads-bot/stargazers">
+    <img src="https://img.shields.io/github/stars/pooraddyy/bumpify-ads-bot?style=for-the-badge&color=f59e0b&logo=github&logoColor=white"/>
   </a>
 </p>
 
-> **⚠️ Beta:** This project is in active development. Open an [Issue](https://github.com/pooraddyy/bumpify-ads-bot/issues) for bugs, or fork and submit a pull request!
-
 </div>
 
----
-
-## ✨ Features
-
-| | Feature | Description |
-|---|---|---|
-| 🔁 | **Multi-Account** | Unlimited Telegram accounts, all handled concurrently |
-| 📸 | **All Media Types** | Text, photo, video, document, audio, sticker, voice, video note |
-| ✍️ | **Formatting Preserved** | Bold, italic, `code`, blockquote, strikethrough — fully kept |
-| 📡 | **Two Send Modes** | Direct (stored content) or Forward (from Saved Messages) |
-| 📊 | **Real-Time Logs** | Per-group logs: name, @username, link, ID, success/fail counts |
-| 🤖 | **Auto-Reply** | Custom message auto-sent on incoming DMs to your accounts |
-| 🔐 | **AES-256 Encryption** | Fernet + PBKDF2 — sessions never stored in plaintext |
-| 🌐 | **Web Panel** | Telegram WebApp with 250+ country codes for account login |
-| ⏱️ | **Custom Interval** | Presets (5 min → 2 hrs) or any custom seconds value |
-| 🎨 | **Colored Buttons** | Bot API 9.4 native colored inline buttons |
-| 🌊 | **Flood Protection** | Automatic FloodWait handling with smart retries |
-| 🔒 | **Private Mode** | Restrict bot access to owner only |
+<br>
 
 ---
 
-## ⚙️ Environment Variables
+## Features
+
+<table>
+<tr>
+<td width="140"><img src="https://img.shields.io/badge/Multi--Account-6366f1?style=flat-square&logoColor=white"/></td>
+<td>Unlimited Telegram accounts broadcasting concurrently with per-account isolation and session management</td>
+</tr>
+<tr>
+<td><img src="https://img.shields.io/badge/Saved_Messages-10b981?style=flat-square&logoColor=white"/></td>
+<td>Forwards directly from each account's Saved Messages — no re-upload, formatting preserved exactly</td>
+</tr>
+<tr>
+<td><img src="https://img.shields.io/badge/All_Media-f59e0b?style=flat-square&logoColor=white"/></td>
+<td>Text, photo, video, document, audio, sticker, voice, video note — every Telegram media type supported</td>
+</tr>
+<tr>
+<td><img src="https://img.shields.io/badge/Logger_Bot-0ea5e9?style=flat-square&logoColor=white"/></td>
+<td>Per-group logs with name, @username, link, ID, success / fail count sent after every broadcast cycle</td>
+</tr>
+<tr>
+<td><img src="https://img.shields.io/badge/Web_Panel-8b5cf6?style=flat-square&logoColor=white"/></td>
+<td>Telegram WebApp for account login (250+ country codes) and a full analytics dashboard</td>
+</tr>
+<tr>
+<td><img src="https://img.shields.io/badge/Analytics-ec4899?style=flat-square&logoColor=white"/></td>
+<td>Total sent, success rate, per-account performance bars with progress indicators, recent activity feed</td>
+</tr>
+<tr>
+<td><img src="https://img.shields.io/badge/Auto_Reply-14b8a6?style=flat-square&logoColor=white"/></td>
+<td>Custom message auto-sent on incoming DMs to any connected account</td>
+</tr>
+<tr>
+<td><img src="https://img.shields.io/badge/AES--256-ef4444?style=flat-square&logoColor=white"/></td>
+<td>Fernet + PBKDF2-HMAC-SHA256 — sessions never stored in plaintext in the database</td>
+</tr>
+<tr>
+<td><img src="https://img.shields.io/badge/Flood_Protection-f97316?style=flat-square&logoColor=white"/></td>
+<td>Automatic FloodWait handling with smart retries, concurrency semaphores, and per-group delays</td>
+</tr>
+<tr>
+<td><img src="https://img.shields.io/badge/Private_Mode-64748b?style=flat-square&logoColor=white"/></td>
+<td>Restrict bot to a comma-separated list of authorized owner IDs — all others are blocked on contact</td>
+</tr>
+</table>
+
+---
+
+## Environment Variables
 
 | Variable | Required | Description |
-|---|---|---|
-| `BOT_TOKEN` | ✅ | Main bot token from [@BotFather](https://t.me/botfather) |
-| `LOGGER_BOT_TOKEN` | ✅ | Logger bot token from [@BotFather](https://t.me/botfather) |
-| `LOGGER_BOT_USERNAME` | ⬜ | Logger bot @username (without @) |
-| `API_ID` | ✅ | From [my.telegram.org](https://my.telegram.org) |
-| `API_HASH` | ✅ | From [my.telegram.org](https://my.telegram.org) |
-| `MONGODB_URL` | ✅ | MongoDB Atlas connection string |
-| `ENCRYPTION_KEY` | ✅ | Min 32-char random secret key |
-| `WEB_APP_URL` | ⬜ | Public HTTPS URL for the WebApp panel button |
-| `WEB_PORT` | ⬜ | Web panel port (default: `3000`) |
-| `LAST_NAME_SUFFIX` | ⬜ | Appended to account last names (default: `-Bumpify`) |
-| `BIO_TEXT` | ⬜ | Bio set on account after login |
-| `AUTO_REPLY_TEXT` | ⬜ | Default auto-reply message text |
-| `PRIVATE_MODE` | ⬜ | Set `true` to restrict bot to owner only |
-| `OWNER_ID` | ⬜ | Your Telegram user ID (required with `PRIVATE_MODE=true`) |
+|---|:---:|---|
+| `BOT_TOKEN` | Yes | Main bot token from [@BotFather](https://t.me/botfather) |
+| `LOGGER_BOT_TOKEN` | Yes | Logger bot token from [@BotFather](https://t.me/botfather) |
+| `LOGGER_BOT_USERNAME` | No | Logger bot @username without the @ symbol |
+| `API_ID` | Yes | Telegram API ID from [my.telegram.org](https://my.telegram.org) |
+| `API_HASH` | Yes | Telegram API hash from [my.telegram.org](https://my.telegram.org) |
+| `MONGODB_URL` | Yes | MongoDB connection string (Atlas free tier works) |
+| `ENCRYPTION_KEY` | Yes | Min 32-char secret key used for session encryption |
+| `WEB_APP_URL` | No | Public HTTPS URL for the WebApp panel |
+| `WEB_PORT` | No | Web server port — default `3000` |
+| `OWNER_IDS` | No | Comma-separated Telegram user IDs e.g. `123456,789012` |
+| `PRIVATE_MODE` | No | Set `true` to restrict all bot access to `OWNER_IDS` |
+| `LAST_NAME_SUFFIX` | No | Appended to account last names — default `-Bumpify` |
+| `BIO_TEXT` | No | Bio text applied to each account after login |
+| `AUTO_REPLY_TEXT` | No | Default auto-reply message for incoming DMs |
+| `START_IMAGE_URL` | No | Image shown in the bot start message |
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
-### Prerequisites
-
-- Python 3.11+
-- MongoDB (Atlas free tier works great)
-- Two Telegram bot tokens from [@BotFather](https://t.me/botfather)
-- Telegram API credentials from [my.telegram.org](https://my.telegram.org)
-
-### 1️⃣ Clone & enter directory
+**Prerequisites** — Python 3.11+, MongoDB, two bot tokens from [@BotFather](https://t.me/botfather), API credentials from [my.telegram.org](https://my.telegram.org)
 
 ```bash
+# Clone
 git clone https://github.com/pooraddyy/bumpify-ads-bot.git
 cd bumpify-ads-bot
-```
 
-### 2️⃣ Install dependencies
-
-```bash
+# Install dependencies
 pip install -r requirements.txt
-```
 
-### 3️⃣ Configure environment
-
-```bash
+# Configure
 cp .env.example .env
 nano .env
-```
 
-### 4️⃣ Run
-
-```bash
+# Run
 python main.py
 ```
 
 ---
 
-## 🖥️ VPS Deployment (Ubuntu / Debian)
+## VPS Deployment
 
-### Step 1 — Connect & prepare system
+### 1 — Prepare server
 
 ```bash
 ssh root@your-server-ip
@@ -118,26 +132,17 @@ apt update && apt upgrade -y
 apt install python3.11 python3-pip git -y
 ```
 
-### Step 2 — Clone & install
+### 2 — Install
 
 ```bash
 git clone https://github.com/pooraddyy/bumpify-ads-bot.git
 cd bumpify-ads-bot
 pip install -r requirements.txt
-```
-
-### Step 3 — Configure environment
-
-```bash
 cp .env.example .env
 nano .env
 ```
 
-Fill in all required values, save with `Ctrl+X → Y → Enter`.
-
-### Step 4 — Run with systemd (auto-restart on crash/reboot)
-
-Create the service file:
+### 3 — systemd service
 
 ```bash
 nano /etc/systemd/system/bumpify.service
@@ -162,32 +167,32 @@ StandardError=journal
 WantedBy=multi-user.target
 ```
 
-Enable and start:
-
 ```bash
 systemctl daemon-reload
 systemctl enable bumpify
 systemctl start bumpify
 ```
 
-### Step 5 — Manage the service
+### 4 — Manage
 
 ```bash
-systemctl status bumpify       # check running status
-journalctl -u bumpify -f       # live logs
+systemctl status bumpify       # running status
+journalctl -u bumpify -f       # live log stream
 systemctl restart bumpify      # restart after changes
 systemctl stop bumpify         # stop
 ```
 
-### Step 6 — Update to latest version
+### 5 — Update
 
 ```bash
-cd /root/bumpify-ads-bot
-git pull
-systemctl restart bumpify
+cd /root/bumpify-ads-bot && git pull && systemctl restart bumpify
 ```
 
-### Optional — HTTPS with Nginx (required for WebApp panel)
+---
+
+## HTTPS + Nginx
+
+Required for the Telegram WebApp panel to function inside Telegram.
 
 ```bash
 apt install nginx certbot python3-certbot-nginx -y
@@ -211,70 +216,90 @@ nginx -t && systemctl reload nginx
 certbot --nginx -d your-domain.com
 ```
 
-Then set `WEB_APP_URL=https://your-domain.com/panel` in `.env` and restart.
+Set `WEB_APP_URL=https://your-domain.com/panel` in `.env` and restart.
 
 ---
 
-## ☁️ Cloud Platforms
+## Cloud Platforms
 
-### Railway
+**Railway** — Fork the repo, connect at [railway.app](https://railway.app), set env vars, start command: `python main.py`
 
-1. Fork this repo on GitHub
-2. Connect to [Railway](https://railway.app) and select the forked repo
-3. Set all environment variables in the Railway dashboard
-4. Start command: `python main.py`
-
-### Render
-
-1. Fork this repo on GitHub
-2. Create a new **Background Worker** on [Render](https://render.com)
-3. Start command: `python main.py`
-4. Set all environment variables in the Render dashboard
+**Render** — Fork the repo, create a Background Worker at [render.com](https://render.com), start command: `python main.py`, set env vars
 
 ---
 
-## 🔒 Security Notes
-
-- Sessions are encrypted with **Fernet (AES-256 CBC + HMAC-SHA256)** before storing in MongoDB
-- `ENCRYPTION_KEY` is processed through PBKDF2 — never stored raw
-- Change `ENCRYPTION_KEY` before going to production and keep it private
-- Never share your `.env` file or MongoDB connection string
-
----
-
-## 🛠️ Contributing
+## Project Structure
 
 ```
-Fork → Clone → Create branch → Make changes → Open Pull Request
+bumpify-ads-bot/
+├── main.py                      Entry point — bot, web server, logger startup
+├── bot/
+│   ├── config.py                Environment variable loading
+│   ├── handlers/
+│   │   ├── start.py             /start command
+│   │   ├── dashboard.py         Dashboard builder
+│   │   ├── callbacks.py         Inline button router
+│   │   ├── ads.py               Ad set, remove, start, stop
+│   │   ├── accounts.py          Account list and analytics
+│   │   ├── interval.py          Broadcast interval settings
+│   │   ├── auto_reply.py        Auto-reply configuration
+│   │   └── faq.py               FAQ and how-to
+│   └── utils/
+│       ├── broadcaster.py       Core broadcast engine (Pyrogram)
+│       ├── db.py                MongoDB interface via Motor
+│       ├── session_manager.py   Account login and session encryption
+│       └── helpers.py           Shared utilities — safe_edit etc
+├── logger_bot/
+│   └── handlers.py              Logger bot /start and log dispatch
+└── web/
+    ├── app.py                   aiohttp REST API server
+    ├── templates/index.html     Telegram WebApp UI
+    └── static/                  CSS and JS for the web panel
 ```
-
-**Ideas for contributions:**
-- Better rate limiting and flood strategies
-- Multi-language bot interface support
-- Scheduled broadcasting (cron-style)
-- Group blacklist / whitelist per account
-- Per-account message customization
 
 ---
 
-## 📢 Support & Community
+## Security
+
+Sessions are encrypted with **Fernet (AES-256 CBC + HMAC-SHA256)** before being stored in MongoDB.
+The `ENCRYPTION_KEY` is processed through **PBKDF2-HMAC-SHA256** with a random salt — never used raw.
+
+Keep `ENCRYPTION_KEY` and `MONGODB_URL` private. Never commit your `.env` file.
+
+---
+
+## Contributing
+
+```
+Fork  →  Clone  →  New branch  →  Changes  →  Pull request
+```
+
+Ideas welcome — scheduled broadcasts, per-account message customization, group whitelist/blacklist, multi-language support.
+
+---
+
+## Support
 
 <div align="center">
 
-Join the Telegram channel for updates and announcements:
-
-[![Telegram](https://img.shields.io/badge/Telegram-Join%20Channel-0088CC?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/pythontodayz)
-
-If this project helped you, a ⭐ goes a long way:
-
-[![GitHub](https://img.shields.io/badge/GitHub-Star%20Repo-black?style=for-the-badge&logo=github)](https://github.com/pooraddyy/bumpify-ads-bot)
+<a href="https://t.me/pythontodayz">
+  <img src="https://img.shields.io/badge/Telegram-Join_Channel-0088CC?style=for-the-badge&logo=telegram&logoColor=white"/>
+</a>
+&nbsp;
+<a href="https://github.com/pooraddyy/bumpify-ads-bot/issues">
+  <img src="https://img.shields.io/badge/GitHub-Open_Issue-111827?style=for-the-badge&logo=github&logoColor=white"/>
+</a>
 
 </div>
 
 ---
 
-## 📄 License
+## License
 
-MIT License — see [LICENSE](LICENSE) for details.
+MIT — see [LICENSE](LICENSE) for full text. Free to use, modify, and distribute.
 
-Free to use, modify, and distribute. Attribution appreciated but not required.
+---
+
+<div align="center">
+  <sub>Built with &nbsp;<img src="https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white" height="16"/> &nbsp;<img src="https://img.shields.io/badge/Pyrogram-2CA5E0?style=flat-square&logo=telegram&logoColor=white" height="16"/> &nbsp;<img src="https://img.shields.io/badge/MongoDB-47A248?style=flat-square&logo=mongodb&logoColor=white" height="16"/> &nbsp;<img src="https://img.shields.io/badge/aiohttp-2C5282?style=flat-square" height="16"/></sub>
+</div>
