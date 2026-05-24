@@ -228,37 +228,6 @@ Set `WEB_APP_URL=https://your-domain.com/panel` in `.env` and restart.
 
 ---
 
-## Project Structure
-
-```
-bumpify-ads-bot/
-├── main.py                      Entry point — bot, web server, logger startup
-├── bot/
-│   ├── config.py                Environment variable loading
-│   ├── handlers/
-│   │   ├── start.py             /start command
-│   │   ├── dashboard.py         Dashboard builder
-│   │   ├── callbacks.py         Inline button router
-│   │   ├── ads.py               Ad set, remove, start, stop
-│   │   ├── accounts.py          Account list and analytics
-│   │   ├── interval.py          Broadcast interval settings
-│   │   ├── auto_reply.py        Auto-reply configuration
-│   │   └── faq.py               FAQ and how-to
-│   └── utils/
-│       ├── broadcaster.py       Core broadcast engine (Pyrogram)
-│       ├── db.py                MongoDB interface via Motor
-│       ├── session_manager.py   Account login and session encryption
-│       └── helpers.py           Shared utilities — safe_edit etc
-├── logger_bot/
-│   └── handlers.py              Logger bot /start and log dispatch
-└── web/
-    ├── app.py                   aiohttp REST API server
-    ├── templates/index.html     Telegram WebApp UI
-    └── static/                  CSS and JS for the web panel
-```
-
----
-
 ## Security
 
 Sessions are encrypted with **Fernet (AES-256 CBC + HMAC-SHA256)** before being stored in MongoDB.
