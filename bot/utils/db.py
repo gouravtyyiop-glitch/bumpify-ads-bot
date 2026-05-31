@@ -1,3 +1,4 @@
+import certifi
 from motor.motor_asyncio import AsyncIOMotorClient
 from bot.config import MONGODB_URL, DATABASE_NAME
 
@@ -11,14 +12,21 @@ def get_db():
 
 async def connect():
     global _client, _db
-    _client = AsyncIOMotorClient(MONGODB_URL)
+
+    _client = AsyncIOMotorClient(
+        MONGODB_URL,
+        tls=True,
+        tlsCAFile=certifi.where(),
+        serverSelectionTimeoutMS=30000,
+    )
+
     _db = _client[DATABASE_NAME]
+
     await _db.users.create_index("user_id", unique=True)
     await _db.accounts.create_index([("owner_id", 1), ("phone", 1)])
     await _db.broadcast_logs.create_index("owner_id")
     await _db.broadcast_logs.create_index([("owner_id", 1), ("_id", -1)])
     await _db.logger_started.create_index("user_id", unique=True)
-
 
 async def close():
     if _client:
