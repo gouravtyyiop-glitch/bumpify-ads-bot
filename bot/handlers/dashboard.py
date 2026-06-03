@@ -8,13 +8,16 @@ from bot.config import WEB_APP_URL
 async def _build_dashboard_content(user_id: int) -> tuple[str, InlineKeyboardMarkup]:
     accounts = await db.get_accounts(user_id)
     ad_data = await db.get_ad_message_data(user_id)
+    targets = await db.get_targets(user_id)
     running = await db.is_ads_running(user_id)
     interval = await db.get_interval(user_id)
     auto_reply = await db.is_auto_reply_enabled(user_id)
 
     ad_status = "Set ✓" if ad_data else "Not Set"
+    target_status = f"{len(targets)} Set ✓" if targets else "Not Set"
     running_status = "🟢 Running" if running else "⏸ Paused"
     ar_label = "ON" if auto_reply else "OFF"
+
     mins, secs = divmod(interval, 60)
     interval_label = f"{mins}m {secs}s" if mins else f"{secs}s"
 
@@ -23,7 +26,8 @@ async def _build_dashboard_content(user_id: int) -> tuple[str, InlineKeyboardMar
         "<blockquote>"
         f"Accounts: <b>{len(accounts)}</b>\n"
         f"Ad Message: <b>{ad_status}</b>\n"
-        f"Broadcast: <b>From Saved Messages</b>\n"
+        f"Targets: <b>{target_status}</b>\n"
+        f"Broadcast: <b>Only Added Links</b>\n"
         f"Interval: <b>{interval_label}</b>\n"
         f"Status: <b>{running_status}</b>\n"
         f"Auto Reply: <b>{ar_label}</b>"
@@ -40,23 +44,45 @@ async def _build_dashboard_content(user_id: int) -> tuple[str, InlineKeyboardMar
     if ad_data:
         ad_row.append(InlineKeyboardButton("Remove Ad", callback_data="remove_ad", api_kwargs={"style": "danger"}))
 
+    target_row = [InlineKeyboardButton("Set Target Links", callback_data="set_targets", api_kwargs={"style": "primary"})]
+    if targets:
+        target_row.append(InlineKeyboardButton("Clear Targets", callback_data="clear_targets", api_kwargs={"style": "danger"}))
+
     keyboard = InlineKeyboardMarkup([
-        [add_acc_btn, InlineKeyboardButton("My Accounts", callback_data="my_accounts", api_kwargs={"style": "primary"})],
+        [
+            add_acc_btn,
+            InlineKeyboardButton("My Accounts", callback_data="my_accounts", api_kwargs={"style": "primary"}),
+        ],
         ad_row,
-        [InlineKeyboardButton("Set Interval", callback_data="set_interval", api_kwargs={"style": "primary"}),
-         InlineKeyboardButton("Analytics", callback_data="analytics", api_kwargs={"style": "primary"})],
-        [InlineKeyboardButton("Start Ads", callback_data="start_ads", api_kwargs={"style": "primary"}),
-         InlineKeyboardButton("Stop Ads", callback_data="stop_ads", api_kwargs={"style": "primary"})],
-        [InlineKeyboardButton("Auto Reply", callback_data="auto_reply", api_kwargs={"style": "primary"})],
-        [InlineKeyboardButton("Home", callback_data="home", api_kwargs={"style": "danger"})],
+        target_row,
+        [
+            InlineKeyboardButton("View Targets", callback_data="view_targets", api_kwargs={"style": "primary"}),
+        ],
+        [
+            InlineKeyboardButton("Set Interval", callback_data="set_interval", api_kwargs={"style": "primary"}),
+            InlineKeyboardButton("Analytics", callback_data="analytics", api_kwargs={"style": "primary"}),
+        ],
+        [
+            InlineKeyboardButton("Start Ads", callback_data="start_ads", api_kwargs={"style": "primary"}),
+            InlineKeyboardButton("Stop Ads", callback_data="stop_ads", api_kwargs={"style": "primary"}),
+        ],
+        [
+            InlineKeyboardButton("Auto Reply", callback_data="auto_reply", api_kwargs={"style": "primary"}),
+        ],
+        [
+            InlineKeyboardButton("Home", callback_data="home", api_kwargs={"style": "danger"}),
+        ],
     ])
+
     return text, keyboard
 
 
 async def dashboard_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     user_id = update.effective_user.id
+
     text, keyboard = await _build_dashboard_content(user_id)
+
     if query:
         await safe_edit(query, text, reply_markup=keyboard, parse_mode="HTML", context=context)
     else:

@@ -54,6 +54,18 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             from bot.handlers.ads import stop_ads_handler
             await stop_ads_handler(update, context)
 
+        elif data == "set_targets":
+            from bot.handlers.targets import set_targets_handler
+            await set_targets_handler(update, context)
+
+        elif data == "view_targets":
+            from bot.handlers.targets import view_targets_handler
+            await view_targets_handler(update, context)
+
+        elif data == "clear_targets":
+            from bot.handlers.targets import clear_targets_handler
+            await clear_targets_handler(update, context)
+
         elif data == "set_interval":
             from bot.handlers.interval import set_interval_handler
             await set_interval_handler(update, context)
@@ -102,7 +114,9 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await safe_edit(
                 query,
                 "<b>Something went wrong.</b>\nPlease try again.",
-                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Home", callback_data="home", api_kwargs={"style": "danger"})]]),
+                reply_markup=InlineKeyboardMarkup([
+                    [InlineKeyboardButton("Home", callback_data="home", api_kwargs={"style": "danger"})]
+                ]),
                 parse_mode="HTML",
                 context=context,
             )
@@ -113,24 +127,38 @@ async def callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def _home_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     caption = START_CAPTION
+
     if LOGGER_BOT_USERNAME:
         caption += (
             f"\n\n<blockquote><b>Important:</b> Start @{LOGGER_BOT_USERNAME} first "
             "to receive real-time broadcast logs.</blockquote>"
         )
-    second_row = [InlineKeyboardButton("FAQ", callback_data="faq", api_kwargs={"style": "primary"})]
+
+    second_row = [
+        InlineKeyboardButton("FAQ", callback_data="faq", api_kwargs={"style": "primary"})
+    ]
+
     if WEB_APP_URL:
-        second_row.append(InlineKeyboardButton("Web Panel", web_app=WebAppInfo(url=WEB_APP_URL), api_kwargs={"style": "primary"}))
+        second_row.append(
+            InlineKeyboardButton(
+                "Web Panel",
+                web_app=WebAppInfo(url=WEB_APP_URL),
+                api_kwargs={"style": "primary"},
+            )
+        )
+
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton("Open Dashboard", callback_data="dashboard", api_kwargs={"style": "success"})],
         second_row,
         [InlineKeyboardButton("How To Use", callback_data="howto", api_kwargs={"style": "primary"})],
     ])
+
     await safe_edit(query, caption, reply_markup=keyboard, parse_mode="HTML", context=context)
 
 
 async def _add_account_fallback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
+
     if WEB_APP_URL:
         keyboard = InlineKeyboardMarkup([
             [InlineKeyboardButton("Open Web Panel", web_app=WebAppInfo(url=WEB_APP_URL), api_kwargs={"style": "primary"})],
@@ -140,13 +168,19 @@ async def _add_account_fallback(update: Update, context: ContextTypes.DEFAULT_TY
             query,
             "<b>Add Account</b>\n\n"
             "<blockquote>Use the web panel to log in with your phone number and OTP.</blockquote>",
-            reply_markup=keyboard, parse_mode="HTML", context=context,
+            reply_markup=keyboard,
+            parse_mode="HTML",
+            context=context,
         )
     else:
-        keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Back", callback_data="dashboard", api_kwargs={"style": "danger"})]])
+        keyboard = InlineKeyboardMarkup([
+            [InlineKeyboardButton("Back", callback_data="dashboard", api_kwargs={"style": "danger"})]
+        ])
         await safe_edit(
             query,
             "<b>Add Account</b>\n\n"
             "<blockquote>Set <code>WEB_APP_URL</code> in your environment to enable the web panel.</blockquote>",
-            reply_markup=keyboard, parse_mode="HTML", context=context,
+            reply_markup=keyboard,
+            parse_mode="HTML",
+            context=context,
         )
