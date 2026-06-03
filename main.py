@@ -1,6 +1,7 @@
 import asyncio
 import logging
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters
+
 from bot.config import BOT_TOKEN, LOGGER_BOT_TOKEN, PRIVATE_MODE, OWNER_IDS
 from bot.handlers.start import start_handler
 from bot.handlers.dashboard import dashboard_handler
@@ -12,6 +13,7 @@ logging.basicConfig(
     format="%(asctime)s %(levelname)s %(name)s: %(message)s",
     level=logging.INFO,
 )
+
 logging.getLogger("pyrogram").setLevel(logging.WARNING)
 logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("httpcore").setLevel(logging.WARNING)
@@ -20,12 +22,17 @@ logging.getLogger("httpcore").setLevel(logging.WARNING)
 def _is_allowed(update) -> bool:
     if not PRIVATE_MODE:
         return True
+
     user = update.effective_user
     if not user:
         return False
+
     if not OWNER_IDS:
-        logging.warning("PRIVATE_MODE enabled but no OWNER_IDS/OWNER_ID configured — blocking all users.")
+        logging.warning(
+            "PRIVATE_MODE enabled but no OWNER_IDS/OWNER_ID configured — blocking all users."
+        )
         return False
+
     return user.id in OWNER_IDS
 
 
@@ -39,23 +46,33 @@ PRIVATE_MSG = (
 async def message_handler(update, context):
     if not update.message:
         return
+
     if not _is_allowed(update):
         await update.message.reply_text(PRIVATE_MSG, parse_mode="HTML")
         return
+
     from bot.handlers.interval import handle_interval_text
     if await handle_interval_text(update, context):
         return
+
     from bot.handlers.auto_reply import handle_auto_reply_text
     if await handle_auto_reply_text(update, context):
         return
+
+    from bot.handlers.targets import handle_target_message
+    if await handle_target_message(update, context):
+        return
+
     from bot.handlers.ads import handle_ad_message
-    await handle_ad_message(update, context)
+    if await handle_ad_message(update, context):
+        return
 
 
 async def guarded_start_handler(update, context):
     if not _is_allowed(update):
         await update.message.reply_text(PRIVATE_MSG, parse_mode="HTML")
         return
+
     await start_handler(update, context)
 
 
@@ -63,6 +80,7 @@ async def guarded_dashboard_handler(update, context):
     if not _is_allowed(update):
         await update.message.reply_text(PRIVATE_MSG, parse_mode="HTML")
         return
+
     await dashboard_handler(update, context)
 
 
@@ -71,11 +89,12 @@ async def guarded_callback_handler(update, context):
         try:
             await update.callback_query.answer(
                 "🔒 This bot is private. Unauthorized access.",
-                show_alert=True
+                show_alert=True,
             )
         except Exception:
             pass
         return
+
     await callback_handler(update, context)
 
 
@@ -86,23 +105,29 @@ def build_main_app() -> Application:
         .concurrent_updates(True)
         .build()
     )
+
     app.add_handler(CommandHandler("start", guarded_start_handler))
     app.add_handler(CommandHandler("dashboard", guarded_dashboard_handler))
     app.add_handler(CallbackQueryHandler(guarded_callback_handler))
-    app.add_handler(MessageHandler(
-        (
-            filters.TEXT
-            | filters.PHOTO
-            | filters.VIDEO
-            | filters.Document.ALL
-            | filters.AUDIO
-            | filters.ANIMATION
-            | filters.Sticker.ALL
-            | filters.VOICE
-            | filters.VIDEO_NOTE
-        ) & ~filters.COMMAND,
-        message_handler,
-    ))
+
+    app.add_handler(
+        MessageHandler(
+            (
+                filters.TEXT
+                | filters.PHOTO
+                | filters.VIDEO
+                | filters.Document.ALL
+                | filters.AUDIO
+                | filters.ANIMATION
+                | filters.Sticker.ALL
+                | filters.VOICE
+                | filters.VIDEO_NOTE
+            )
+            & ~filters.COMMAND,
+            message_handler,
+        )
+    )
+
     return app
 
 
@@ -110,10 +135,12 @@ async def run_bot(app: Application):
     await app.initialize()
     await app.start()
     await app.bot.delete_webhook(drop_pending_updates=True)
+
     await app.updater.start_polling(
         drop_pending_updates=True,
         allowed_updates=["message", "callback_query", "edited_message"],
     )
+
     logging.info("Main bot started")
 
 
@@ -121,10 +148,12 @@ async def run_logger(app: Application):
     await app.initialize()
     await app.start()
     await app.bot.delete_webhook(drop_pending_updates=True)
+
     await app.updater.start_polling(
         drop_pending_updates=True,
         allowed_updates=["message", "callback_query"],
     )
+
     logging.info("Logger bot started")
 
 
@@ -138,8 +167,10 @@ async def main():
     await run_bot(main_app)
 
     logger_app = None
+
     if LOGGER_BOT_TOKEN:
         from logger_bot.handlers import build_logger_app
+
         logger_app = build_logger_app()
         await run_logger(logger_app)
 
@@ -147,16 +178,20 @@ async def main():
 
     try:
         await asyncio.Event().wait()
+
     except (KeyboardInterrupt, SystemExit):
         pass
+
     finally:
         await main_app.updater.stop()
         await main_app.stop()
         await main_app.shutdown()
+
         if logger_app is not None:
             await logger_app.updater.stop()
             await logger_app.stop()
             await logger_app.shutdown()
+
         await web_runner.cleanup()
         await db.close()
 
