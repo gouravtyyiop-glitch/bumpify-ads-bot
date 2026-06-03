@@ -28,6 +28,7 @@ async def connect():
     await _db.broadcast_logs.create_index([("owner_id", 1), ("_id", -1)])
     await _db.logger_started.create_index("user_id", unique=True)
 
+
 async def close():
     if _client:
         _client.close()
@@ -56,17 +57,6 @@ async def clear_ad_message_data(user_id: int):
 async def get_ad_message_data(user_id: int) -> dict | None:
     user = await get_user(user_id)
     return user.get("ad_msg") if user else None
-
-
-async def set_prompt_message(user_id: int, chat_id: int, msg_id: int):
-    await upsert_user(user_id, {"prompt_chat_id": chat_id, "prompt_msg_id": msg_id})
-
-
-async def get_prompt_message(user_id: int) -> tuple[int, int] | None:
-    user = await get_user(user_id)
-    if user and user.get("prompt_chat_id"):
-        return user["prompt_chat_id"], user["prompt_msg_id"]
-    return None
 
 
 async def set_interval(user_id: int, seconds: int):
@@ -185,8 +175,34 @@ async def remove_account(owner_id: int, phone: str):
     await get_db().accounts.delete_one({"owner_id": owner_id, "phone": phone})
 
 
+# ===== TARGET LINKS / FORUM TOPICS =====
+
+async def set_waiting_for_targets(user_id: int, value: bool):
+    await upsert_user(user_id, {"waiting_for_targets": value})
+
+
+async def is_waiting_for_targets(user_id: int) -> bool:
+    user = await get_user(user_id)
+    return user.get("waiting_for_targets", False) if user else False
+
+
+async def set_targets(user_id: int, targets: list[dict]):
+    await upsert_user(user_id, {"targets": targets})
+
+
+async def get_targets(user_id: int) -> list[dict]:
+    user = await get_user(user_id)
+    return user.get("targets", []) if user else []
+
+
+async def clear_targets(user_id: int):
+    await upsert_user(user_id, {"targets": []})
+
+
+# ===== LOGS / STATS =====
+
 async def log_broadcast(owner_id: int, account_phone: str, account_num: int,
-                        group_id: int, group_title: str, group_username: str,
+                        group_id, group_title: str, group_username: str,
                         success: bool, error: str = ""):
     await get_db().broadcast_logs.insert_one({
         "owner_id": owner_id,
